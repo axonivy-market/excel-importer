@@ -6,4 +6,5 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Automatic-Module-Name: excel.importer.test
 Export-Package: com.axonivy.util.excel.test
-Require-Bundle: ch.ivyteam.ivy.scripting.dataclass
+Require-Bundle: ch.ivyteam.ivy.scripting.dataclass,
+ ch.ivyteam.ivy.dialog.config
