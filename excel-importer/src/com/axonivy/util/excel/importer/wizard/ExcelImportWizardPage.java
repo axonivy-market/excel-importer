@@ -5,10 +5,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -26,10 +28,8 @@ import ch.ivyteam.swt.dialogs.SwtCommonDialogs;
 public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Listener {
 
   static final String PAGE_ID = "ImportExcel";
-  private Combo destinationNameField;
-  private Combo sourceProjectField;
-  private Button destinationBrowseButton;
   private final ExcelImportProcessor processor;
+  private ExcelUi ui;
 
   public ExcelImportWizardPage(ExcelImportProcessor processor) {
     super(PAGE_ID);
@@ -38,57 +38,87 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
     setPageComplete(false);
   }
 
+  private static class ExcelUi extends Composite {
+
+    public final Combo destinationNameField;
+    public final Combo sourceProjectField;
+    public final Button destinationBrowseButton;
+    public final Combo persistence;
+
+    public ExcelUi(Composite parent) {
+      super(parent, SWT.NONE);
+
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 3;
+      setLayout(layout);
+      setLayoutData(new GridData(272));
+
+      Label destinationLabel = new Label(this, 0);
+      destinationLabel.setText("From file");
+      destinationNameField = new Combo(this, 2052);
+      var dataDest = new GridData(768);
+      dataDest.widthHint = 250;
+      destinationNameField.setLayoutData(dataDest);
+      destinationBrowseButton = new Button(this, 8);
+      destinationBrowseButton.setText("Browse ...");
+
+      Label sourceLabel = new Label(this, 0);
+      sourceLabel.setText("Project");
+      this.sourceProjectField = new Combo(this, 2060);
+      GridData data = new GridData(768);
+      data.widthHint = 250;
+      data.horizontalSpan = 2;
+      sourceProjectField.setLayoutData(data);
+
+      Label unitLabel = new Label(this, SWT.NONE);
+      unitLabel.setText("Persistence");
+      this.persistence = new Combo(this, 2060);
+      GridData data3 = new GridData(768);
+      data3.widthHint = 250;
+      data3.horizontalSpan = 2;
+      persistence.setLayoutData(data3);
+    }
+  }
+
   @Override
   public void createControl(Composite parent) {
-    Composite group = new Composite(parent, 0);
-    GridLayout layout = new GridLayout();
-    layout.numColumns = 3;
-    group.setLayout(layout);
-    group.setLayoutData(new GridData(272));
-    Label sourceLabel = new Label(group, 0);
-    sourceLabel.setText("Project");
-    this.sourceProjectField = new Combo(group, 2060);
-    GridData data = new GridData(768);
-    data.widthHint = 250;
-    data.horizontalSpan = 2;
-    sourceProjectField.setLayoutData(data);
-    for (String projectName : ExcelImportUtil.getIvyProjectNames()) {
-      sourceProjectField.add(projectName);
-    }
-    sourceProjectField.setText(processor.getSelectedSourceProjectName());
-    sourceProjectField.addListener(24, this);
-    sourceProjectField.addListener(13, this);
-    Label destinationLabel = new Label(group, 0);
-    destinationLabel.setText("From file");
-    destinationNameField = new Combo(group, 2052);
+    this.ui = new ExcelUi(parent);
+
     String[] destinations = getDialogSettings().getArray(ExcelImportUtil.DESTINATION_KEY);
     if (destinations != null) {
-      destinationNameField.setText(destinations[0]);
+      ui.destinationNameField.setText(destinations[0]);
       for (String destination : destinations) {
         if (destination.endsWith(ExcelImportUtil.DEFAULT_EXTENSION)) {
-          destinationNameField.add(destination);
+          ui.destinationNameField.add(destination);
           handleInputChanged();
         }
       }
     }
-    destinationNameField.addListener(24, this);
-    destinationNameField.addListener(13, this);
-    data = new GridData(768);
-    data.widthHint = 250;
-    destinationNameField.setLayoutData(data);
-    destinationBrowseButton = new Button(group, 8);
-    destinationBrowseButton.setText("Browse ...");
-    destinationBrowseButton.addListener(13, this);
-    setButtonLayoutData(destinationBrowseButton);
-    setControl(group);
+
+    for (String projectName : ExcelImportUtil.getIvyProjectNames()) {
+      ui.sourceProjectField.add(projectName);
+    }
+    ui.sourceProjectField.setText(processor.getSelectedSourceProjectName());
+    ui.sourceProjectField.addListener(SWT.Modify, this);
+    ui.sourceProjectField.addListener(SWT.Selection, this);
+
+    ui.destinationNameField.addListener(SWT.Modify, this);
+    ui.destinationNameField.addListener(SWT.Selection, this);
+    ui.destinationBrowseButton.addListener(SWT.Selection, this);
+
+    ui.persistence.addListener(SWT.Modify, this);
+    ui.persistence.addListener(SWT.Selection, this);
+
+    setButtonLayoutData(ui.destinationBrowseButton);
+    setControl(ui);
   }
 
   @Override
   public void handleEvent(Event event) {
     Widget source = event.widget;
-    if (source.equals(destinationBrowseButton)) {
+    if (source.equals(ui.destinationBrowseButton)) {
       handleDestinationBrowseButtonPressed();
-    } else if (source.equals(sourceProjectField) || source.equals(destinationNameField)) {
+    } else {
       handleInputChanged();
     }
   }
@@ -103,8 +133,18 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
 
   protected void handleInputChanged() {
     var status = WizardStatus.createOkStatus();
-    status.merge(processor.setImportFile(destinationNameField.getText()));
-    status.merge(processor.setSource(this.sourceProjectField.getText()));
+
+    status.merge(processor.setImportFile(ui.destinationNameField.getText()));
+
+    String newProject = ui.sourceProjectField.getText();
+    var sameProject = Objects.equals(processor.getSelectedSourceProjectName(), newProject);
+    status.merge(processor.setSource(newProject));
+    if (!sameProject) {
+      ui.persistence.setItems(processor.units().toArray(String[]::new)); // update
+    }
+
+    status.merge(processor.setPersistence(ui.persistence.getText()));
+
     setPageComplete(status.isLowerThan(WizardStatus.ERROR));
     if (status.isOk()) {
       setMessage(processor.getWizardPageOkMessage(PAGE_ID), 0);
@@ -116,8 +156,8 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
   }
 
   private void saveDialogSettings() {
-    List<String> destinations = new LinkedList<String>(Arrays.asList(destinationNameField.getItems()));
-    String path = destinationNameField.getText();
+    List<String> destinations = new LinkedList<String>(Arrays.asList(ui.destinationNameField.getItems()));
+    String path = ui.destinationNameField.getText();
     String lowerCasePath = path.toLowerCase();
     if (destinations.contains(path)) {
       destinations.remove(path);
@@ -137,19 +177,19 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
     dialog.setFilterExtensions(ExcelImportUtil.IMPORT_TYPE);
     dialog.setText("Select import file");
     dialog.setFilterPath(StringUtils.EMPTY);
-    String currentSourceString = destinationNameField.getText();
+    String currentSourceString = ui.destinationNameField.getText();
     dialog.setFilterPath(currentSourceString);
     String selectedFileName = dialog.open();
     if (selectedFileName != null) {
-      destinationNameField.setText(selectedFileName);
+      ui.destinationNameField.setText(selectedFileName);
     }
   }
 
   private boolean executeImport() {
-    if (destinationNameField.getText().lastIndexOf(File.separator) == -1) {
-      destinationNameField.setText(
-              ExcelImportUtil.DEFAULT_FILTER_PATH + File.separator + destinationNameField.getText());
-      processor.setImportFile(destinationNameField.getText());
+    if (ui.destinationNameField.getText().lastIndexOf(File.separator) == -1) {
+      ui.destinationNameField.setText(
+              ExcelImportUtil.DEFAULT_FILTER_PATH + File.separator + ui.destinationNameField.getText());
+      processor.setImportFile(ui.destinationNameField.getText());
     }
     try {
       getContainer().run(true, true, processor);
