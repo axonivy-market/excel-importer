@@ -19,6 +19,7 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 
+import com.axonivy.util.excel.importer.DialogCreator;
 import com.axonivy.util.excel.importer.EntityClassReader;
 import com.axonivy.util.excel.importer.EntityDataLoader;
 import com.axonivy.util.excel.importer.ExcelLoader;
@@ -114,6 +115,8 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     EntityDataLoader loader = new EntityDataLoader(ivyEntities);
     loader.createTable(newEntity);
     loader.load(sheet, newEntity);
+
+    new DialogCreator().createDialog(newEntity, selectedPersistence);
 
     ProcessDrawer drawer = new ProcessDrawer(manager.getProject());
     drawer.drawManager(newEntity);
