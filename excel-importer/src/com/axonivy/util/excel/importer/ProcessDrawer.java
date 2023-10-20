@@ -7,8 +7,6 @@ import ch.ivyteam.ivy.process.IProcess;
 import ch.ivyteam.ivy.process.model.Process;
 import ch.ivyteam.ivy.process.model.diagram.Diagram;
 import ch.ivyteam.ivy.process.model.element.activity.DialogCall;
-import ch.ivyteam.ivy.process.model.element.activity.value.dialog.UserDialogId;
-import ch.ivyteam.ivy.process.model.element.activity.value.dialog.UserDialogStart;
 import ch.ivyteam.ivy.process.model.element.event.end.TaskEnd;
 import ch.ivyteam.ivy.process.model.element.event.start.RequestStart;
 import ch.ivyteam.ivy.process.model.element.event.start.value.CallSignature;
@@ -37,9 +35,7 @@ public class ProcessDrawer {
 
     DialogCall call = process.search().type(DialogCall.class).findOne();
     call.setName(name+" UI");
-    var dialogId = UserDialogId.create(entity.getName()+"Manager");
-    var target = new UserDialogStart(dialogId, new CallSignature("start"));
-    call.setTargetDialog(target);
+    call.setTargetDialog(DialogCreator.dialogStartFor(entity));
 
     rdm.save();
 
