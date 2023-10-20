@@ -1,0 +1,10 @@
+MyEntity #class
+true #isEntity
+com.axonivy.util.excel.importer #namespace
+id Integer #field
+id Identifier #fieldComment
+id PERSISTENT #fieldModifier
+id ID #fieldModifier
+id GENERATED #fieldModifier
+name String #field
+name PERSISTENT #fieldModifier
