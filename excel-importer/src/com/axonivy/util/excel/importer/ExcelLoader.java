@@ -1,5 +1,6 @@
 package com.axonivy.util.excel.importer;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,29 +13,35 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public class ExcelLoader {
 
   public static Workbook load(Path filePath) {
-    if (filePath.getFileName().toString().endsWith(".xls")) {
-      return openXls(filePath);
-    } else {
-      return openXlsx(filePath);
-    }
-  }
-
-  private static Workbook openXls(Path filePath) {
-    try (InputStream input = Files.newInputStream(filePath);
-            POIFSFileSystem fs = new POIFSFileSystem(input);
-            HSSFWorkbook workbook = new HSSFWorkbook(fs);) {
-      return workbook;
+    try (InputStream is = Files.newInputStream(filePath)) {
+      return load(filePath.getFileName().toString(), is);
     } catch (Exception ex) {
       throw new RuntimeException("Could not read excel file from " + filePath, ex);
     }
   }
 
-  private static Workbook openXlsx(Path filePath) {
-    try (InputStream input = Files.newInputStream(filePath);
-            XSSFWorkbook workbook = new XSSFWorkbook(input);) {
+  public static Workbook load(String name, InputStream stream) {
+    try {
+      if (name.endsWith(".xls")) {
+        return openXls(stream);
+      } else {
+        return openXlsx(stream);
+      }
+    } catch (IOException ex) {
+      throw new RuntimeException("Could not read excel file from " + name, ex);
+    }
+  }
+
+  private static Workbook openXls(InputStream is) throws IOException {
+    try ( POIFSFileSystem fs = new POIFSFileSystem(is);
+          HSSFWorkbook workbook = new HSSFWorkbook(fs);) {
       return workbook;
-    } catch (Exception ex) {
-      throw new RuntimeException("Could not read excel file from " + filePath, ex);
+    }
+  }
+
+  private static Workbook openXlsx(InputStream is) throws IOException {
+    try (XSSFWorkbook workbook = new XSSFWorkbook(is);) {
+      return workbook;
     }
   }
 
