@@ -46,10 +46,10 @@ public class ProcessDrawer {
     Diagram diagram = process.getDiagram();
     var start = diagram.add().shape(RequestStart.class).at(50, 50);
     RequestStart starter = start.getElement();
-    starter.setSignature(new CallSignature("manage"));
-    starter.setName("manage");
+    starter.setSignature(new CallSignature("start"));
+    starter.setName("start");
 
-    var dialog = diagram.add().shape(DialogCall.class).at(150, 50);
+    var dialog = diagram.add().shape(DialogCall.class).at(180, 50);
     start.edges().connectTo(dialog);
 
     var end = diagram.add().shape(TaskEnd.class).at(300, 50);

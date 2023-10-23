@@ -1,7 +1,7 @@
-# MY-PRODUCT-NAME
+# Excel to Dialog importer
 
-[![CI Build](https://github.com/axonivy-market/REPO-NAME/actions/workflows/ci.yml/badge.svg)](https://github.com/axonivy-market/REPO-NAME/actions/workflows/ci.yml)
+[![CI Build](https://github.com/axonivy-market/excel-importer/actions/workflows/ci.yml/badge.svg)](https://github.com/axonivy-market/excel-importer/actions/workflows/ci.yml)
 
-"YOUR SHORT DESCRIPTION GOES HERE"
+Crafts a new web application and its first dialog from an existing Excel sheet.
 
-Read our [documentation](MY-PRODUCT-NAME-product/README.md).
+Read our [documentation](excel-importer-product/README.md).

@@ -30,8 +30,6 @@ public class EntityDataLoader {
   }
 
   public void load(Sheet sheet, IEntityClass entity) {
-    createTable(entity); // enforce db-schema to exist!
-
     Iterator<Row> rows = sheet.rowIterator();
     rows.next(); // skip header
 
@@ -41,26 +39,32 @@ public class EntityDataLoader {
     EntityManager em = manager.createEntityManager();
     EntityTransaction tx = em.getTransaction();
     tx.begin();
+    AtomicInteger rCount = new AtomicInteger();
     try {
-      AtomicInteger rCount = new AtomicInteger();
       rows.forEachRemaining(row -> {
         Query insert = em.createNativeQuery(query);
         insert.setParameter("id", rCount.incrementAndGet());
-        Iterator<Cell> cells = row.cellIterator();
-        int c = 0;
-        c++; // consumed by 'id'
-        while(cells.hasNext()) {
-          Cell cell = cells.next();
-          IEntityClassField field = fields.get(c);
-          String column = field.getName();
-          insert.setParameter(column, getValue(cell));
-          c++;
-        }
-        insert.executeUpdate();
+        insertCallValuesAsParameter(fields, row, insert);
+        var inserted = insert.executeUpdate();
+        System.out.println("updateded "+inserted+" records");
       });
     } finally {
+      System.out.println("inserted " + rCount + " rows");
       tx.commit();
       em.close();
+    }
+  }
+
+  private void insertCallValuesAsParameter(List<? extends IEntityClassField> fields, Row row, Query insert) {
+    Iterator<Cell> cells = row.cellIterator();
+    int c = 0;
+    c++; // consumed by 'id'
+    while(cells.hasNext()) {
+      Cell cell = cells.next();
+      IEntityClassField field = fields.get(c);
+      String column = field.getName();
+      insert.setParameter(column, getValue(cell));
+      c++;
     }
   }
 

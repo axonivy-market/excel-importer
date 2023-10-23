@@ -23,6 +23,7 @@ import ch.ivyteam.ivy.dialog.configuration.IUserDialog;
 import ch.ivyteam.ivy.environment.IvyTest;
 import ch.ivyteam.ivy.process.model.Process;
 import ch.ivyteam.ivy.process.model.element.activity.Script;
+import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogMethodStart;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 
 @IvyTest
@@ -50,9 +51,17 @@ public class TestDialogCreator {
       Process process = dialog.getProcess(null).getModel();
       Script loader = process.search().type(Script.class).findOne();
       assertThat(loader.getCode()).contains(customer.getName());
-
+      var delete = process.search().type(HtmlDialogMethodStart.class).findOne();
+      String removal = delete.getOutput().getCode();
+      assertThat(removal)
+        .contains("testing.remove(");
+      
       var view = read(dialog.getViewFile());
       assertThat(view).contains("p:dataTable");
+      assertThat(view)
+        .as("visualizes properties of the entity")
+        .contains("firstname")
+        .doesNotContain("<!-- [entity.fields] -->");
 
     } finally {
       customer.getResource().delete(true, new NullProgressMonitor());
