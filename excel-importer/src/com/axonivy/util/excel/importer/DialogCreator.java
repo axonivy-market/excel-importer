@@ -5,25 +5,34 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 
+import ch.ivyteam.ivy.IvyConstants;
 import ch.ivyteam.ivy.dialog.configuration.DialogCreationParameters;
 import ch.ivyteam.ivy.dialog.configuration.IUserDialog;
 import ch.ivyteam.ivy.dialog.configuration.IUserDialogManager;
+import ch.ivyteam.ivy.dialog.configuration.ViewLayout;
+import ch.ivyteam.ivy.dialog.ui.ViewTechnologyDesignerUiRegistry;
 import ch.ivyteam.ivy.process.IProcess;
 import ch.ivyteam.ivy.process.model.element.activity.value.dialog.UserDialogId;
 import ch.ivyteam.ivy.process.model.element.activity.value.dialog.UserDialogStart;
 import ch.ivyteam.ivy.process.model.element.event.start.value.CallSignature;
 import ch.ivyteam.ivy.process.model.value.scripting.QualifiedType;
 import ch.ivyteam.ivy.process.model.value.scripting.VariableDesc;
+import ch.ivyteam.ivy.project.IIvyProject;
+import ch.ivyteam.ivy.project.IvyProjectNavigationUtil;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClassField;
+import ch.ivyteam.log.Logger;
 
 @SuppressWarnings("restriction")
 public class DialogCreator {
+
+  private static final Logger LOGGER = Logger.getLogger(DialogCreator.class);
 
   public IUserDialog createDialog(IEntityClass entity, String unit) {
     var global = IUserDialogManager.instance();
@@ -33,7 +42,11 @@ public class DialogCreator {
     var target = dialogStartFor(entity);
 
     VariableDesc entries = new VariableDesc("entries", new QualifiedType(List.class.getName(), List.of(new QualifiedType(entity.getName()))));
-    var params = new DialogCreationParameters.Builder(project, target.getId().getRawId())
+
+    prepareTemplate(project, "frame-10");
+    String dialogId = target.getId().getRawId();
+    var params = new DialogCreationParameters.Builder(project, dialogId)
+      .viewTechId(IvyConstants.VIEW_TECHONOLOGY_JSF)
       .signature(target.getStartMethod())
       .dataClassFields(List.of(entries))
       .toCreationParams();
@@ -46,6 +59,18 @@ public class DialogCreator {
     extendView(userDialog.getViewFile(), entity);
 
     return userDialog;
+  }
+
+  private void prepareTemplate(IProject project, String template) {
+    try {
+      var view = ViewTechnologyDesignerUiRegistry.getInstance().getViewTechnology(IvyConstants.VIEW_TECHONOLOGY_JSF);
+      IIvyProject ivyProject = IvyProjectNavigationUtil.getIvyProject(project);
+      List<ViewLayout> layouts = view.getViewLayoutProvider().getViewLayouts(ivyProject);
+      Optional<ViewLayout> framed = layouts.stream().filter(l -> l.getLayoutName().contains("2 Column")).findFirst();
+      framed.get().getViewContent("nevermind", template, List.of()); // just load to web-content
+    } catch (Exception ex) {
+      LOGGER.error("Failed to prepare dialog template", ex);
+    }
   }
 
   private void extendView(IFile viewFile, IEntityClass entity) {
