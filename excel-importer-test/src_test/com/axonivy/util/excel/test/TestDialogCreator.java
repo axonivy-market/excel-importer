@@ -53,6 +53,10 @@ public class TestDialogCreator {
 
       var view = read(dialog.getViewFile());
       assertThat(view).contains("p:dataTable");
+      assertThat(view)
+        .as("visualizes properties of the entity")
+        .contains("firstname")
+        .doesNotContain("<!-- [entity.fields] -->");
 
     } finally {
       customer.getResource().delete(true, new NullProgressMonitor());
