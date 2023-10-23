@@ -57,12 +57,13 @@ public class DialogCreator {
     endShape.move(new PositionDelta(200, 0)); // space for loader script
 
     Script loader = process.add().element(Script.class);
+    loader.setName("load db");
     loader.setCode("""
       out.entries = ivy.persistence.%s.findAll(%s.class);
       """.formatted(unit, entity.getName()));
 
     DiagramShape scriptShape = loader.getShape();
-    scriptShape.moveTo(start.getShape().getBounds().getCenter().shiftX(50));
+    scriptShape.moveTo(start.getShape().getBounds().getCenter().shiftX(150));
     process.connections().reconnect(start.getOutgoing().get(0)).to(loader);
 
     scriptShape.edges().connectTo(endShape);
