@@ -1,8 +1,11 @@
 package com.axonivy.util.excel.importer;
 
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -22,6 +25,7 @@ import ch.ivyteam.ivy.process.model.element.event.start.value.CallSignature;
 import ch.ivyteam.ivy.process.model.value.scripting.QualifiedType;
 import ch.ivyteam.ivy.process.model.value.scripting.VariableDesc;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
+import ch.ivyteam.ivy.scripting.dataclass.IEntityClassField;
 
 @SuppressWarnings("restriction")
 public class DialogCreator {
@@ -45,7 +49,7 @@ public class DialogCreator {
     extendProcess(process, entity, unit);
     processRdm.save();
 
-    extendView(userDialog.getViewFile());
+    extendView(userDialog.getViewFile(), entity);
 
     return userDialog;
   }
@@ -69,12 +73,36 @@ public class DialogCreator {
     scriptShape.edges().connectTo(endShape);
   }
 
-  private void extendView(IFile viewFile) {
+  private void extendView(IFile viewFile, IEntityClass entity) {
     try(InputStream is = DialogCreator.class.getResourceAsStream("/com/axonivy/util/excel/importer/EntityManager/EntityManager.xhtml")) {
-      viewFile.setContents(is, 0, null);
+      var bos = new ByteArrayOutputStream();
+      is.transferTo(bos);
+      var template = new String(bos.toByteArray());
+      
+      String rendered = renderFields(entity, template);
+      
+      var bis = new ByteArrayInputStream(rendered.getBytes());
+      viewFile.setContents(bis, 0, null);
     } catch (Exception ex) {
       throw new RuntimeException("Failed to extend view for "+viewFile, ex);
     }
+  }
+
+  private String renderFields(IEntityClass entity, String template) {
+    String fieldXhtml = entity.getFields().stream()
+      .filter(fld -> !fld.getName().equals("id"))
+      .map(this::htmlview)
+      .collect(Collectors.joining("\n"));
+    return template.replace("<!-- [entity.fields] -->", fieldXhtml);
+  }
+
+  private String htmlview(IEntityClassField field) {
+    String fieldXhtml = """
+        <p:column headerText="%s">
+          <h:outputText value="#{entity.%s}"/>
+        </p:column>
+    """.formatted(field.getName(), field.getName());
+    return fieldXhtml;
   }
 
   public static UserDialogStart dialogStartFor(IEntityClass entity) {
