@@ -16,7 +16,6 @@ import ch.ivyteam.ivy.dialog.configuration.DialogCreationParameters;
 import ch.ivyteam.ivy.dialog.configuration.IUserDialog;
 import ch.ivyteam.ivy.dialog.configuration.IUserDialogManager;
 import ch.ivyteam.ivy.dialog.configuration.ViewLayout;
-import ch.ivyteam.ivy.dialog.ui.ViewTechnologyDesignerUiRegistry;
 import ch.ivyteam.ivy.process.IProcess;
 import ch.ivyteam.ivy.process.model.element.activity.value.dialog.UserDialogId;
 import ch.ivyteam.ivy.process.model.element.activity.value.dialog.UserDialogStart;
@@ -63,12 +62,12 @@ public class DialogCreator {
 
   private void prepareTemplate(IProject project, String template) {
     try {
-      var view = ViewTechnologyDesignerUiRegistry.getInstance().getViewTechnology(IvyConstants.VIEW_TECHONOLOGY_JSF);
+      var view = ch.ivyteam.ivy.dialog.ui.ViewTechnologyDesignerUiRegistry.getInstance().getViewTechnology(IvyConstants.VIEW_TECHONOLOGY_JSF);
       IIvyProject ivyProject = IvyProjectNavigationUtil.getIvyProject(project);
       List<ViewLayout> layouts = view.getViewLayoutProvider().getViewLayouts(ivyProject);
       Optional<ViewLayout> framed = layouts.stream().filter(l -> l.getLayoutName().contains("2 Column")).findFirst();
       framed.get().getViewContent("nevermind", template, List.of()); // just load to web-content
-    } catch (Exception ex) {
+    } catch (Throwable ex) {
       LOGGER.error("Failed to prepare dialog template", ex);
     }
   }
