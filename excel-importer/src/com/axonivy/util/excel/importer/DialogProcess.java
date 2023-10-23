@@ -52,8 +52,8 @@ public class DialogProcess {
   }
 
   private void addDeleteAction() {
-    int x = 50;
-    int y = 400;
+    int x = 96;
+    int y = 248;
     var delete = process.add().element(HtmlDialogMethodStart.class);
     delete.getShape().moveTo(new Position(x, y));
     delete.setName("delete(" + entity.getSimpleName() + ")");
