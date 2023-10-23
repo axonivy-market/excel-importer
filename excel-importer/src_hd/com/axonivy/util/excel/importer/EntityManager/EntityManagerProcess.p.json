@@ -59,5 +59,34 @@
         "at" : { "x" : 224, "y" : 64 }
       },
       "connect" : { "id" : "f2", "to" : "f1" }
+    }, {
+      "id" : "f8",
+      "type" : "HtmlDialogMethodStart",
+      "name" : "delete(MyEntity)",
+      "config" : {
+        "callSignature" : "delete",
+        "input" : {
+          "params" : [
+            { "name" : "entity", "type" : "com.axonivy.util.excel.importer.MyEntity" }
+          ],
+          "code" : [
+            "import com.axonivy.util.excel.importer.MyEntity;",
+            "",
+            "MyEntity loaded = ivy.persistence.myUnit.find(MyEntity.class, param.entity.getId()) as MyEntity;",
+            "ivy.persistence.myUnit.remove(loaded);"
+          ]
+        },
+        "guid" : "18B5C47DE677D3E2"
+      },
+      "visual" : {
+        "at" : { "x" : 96, "y" : 224 }
+      },
+      "connect" : { "id" : "f10", "to" : "f9" }
+    }, {
+      "id" : "f9",
+      "type" : "HtmlDialogEnd",
+      "visual" : {
+        "at" : { "x" : 224, "y" : 224 }
+      }
     } ]
 }
