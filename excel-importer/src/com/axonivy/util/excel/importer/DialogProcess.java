@@ -64,6 +64,7 @@ public class DialogProcess {
       import NAME;
       SHORT loaded = ivy.persistence.UNIT.find(SHORT.class, param.entity.getId()) as SHORT;
       ivy.persistence.UNIT.remove(loaded);
+      out.entries.remove(param.entity);
     """;
     var code = template
             .replaceAll("NAME", entity.getName())
