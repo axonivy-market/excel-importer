@@ -7,8 +7,8 @@
   <name>excel-importer</name>
 
   <modules>
-    <module>${project.name}</module>
-    <module>${project.name}-test</module>
+    <module>excel-importer</module>
+    <module>excel-importer-test</module>
     <module>${project.name}-product</module>
   </modules>
 
