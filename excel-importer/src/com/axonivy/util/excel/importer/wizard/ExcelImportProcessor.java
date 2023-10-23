@@ -25,6 +25,7 @@ import com.axonivy.util.excel.importer.EntityDataLoader;
 import com.axonivy.util.excel.importer.ExcelLoader;
 import com.axonivy.util.excel.importer.ProcessDrawer;
 
+import ch.ivyteam.awt.swt.SwtRunnable;
 import ch.ivyteam.eclipse.util.EclipseUtil;
 import ch.ivyteam.eclipse.util.MonitorUtil;
 import ch.ivyteam.ivy.application.IProcessModelVersion;
@@ -85,7 +86,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
       ResourcesPlugin.getWorkspace().run(m -> {
         var manager = IDataClassManager.instance().getProjectDataModelFor(selectedSourceProject.getProject());
         try {
-          importExcel(manager, importFile);
+          importExcel(manager, importFile, m);
         } catch (IOException ex) {
           status = EclipseUtil.createErrorStatus(ex);
         }
@@ -97,8 +98,10 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     }
   }
 
-  private void importExcel(IProjectDataClassManager manager, FileResource excel) throws IOException {
+  private void importExcel(IProjectDataClassManager manager, FileResource excel, IProgressMonitor monitor) throws IOException {
     String entityName = StringUtils.substringBeforeLast(excel.name(), ".");
+    entityName = StringUtils.capitalize(entityName);
+
     var tempFile = Files.createTempFile(entityName, "."+StringUtils.substringAfterLast(excel.name(), "."));
     Files.copy(excel.read().inputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
 
@@ -106,20 +109,29 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     Sheet sheet = wb.getSheetAt(0);
 
     var newEntity = new EntityClassReader(manager).toEntity(sheet, entityName);
-    EclipseUiUtil.openEditor(newEntity);
     newEntity.save();
+    SwtRunnable.execNowOrAsync(()->
+      EclipseUiUtil.openEditor(newEntity)
+    );
+    monitor.setTaskName("Created EntityClass "+entityName);
 
     IProcessModelVersion pmv = manager.getProcessModelVersion();
     var persist = pmv.getAdapter(IPersistenceContext.class);
     var ivyEntities = persist.get(selectedPersistence);
     EntityDataLoader loader = new EntityDataLoader(ivyEntities);
-    loader.createTable(newEntity);
+    var entityType = loader.createTable(newEntity);
     loader.load(sheet, newEntity);
+    List<?> loaded = ivyEntities.findAll(entityType);
+    System.out.println("inserted entities "+loaded.size());
+    monitor.setTaskName("Loaded Excel rows into Database "+loaded.size());
 
     new DialogCreator().createDialog(newEntity, selectedPersistence);
 
     ProcessDrawer drawer = new ProcessDrawer(manager.getProject());
-    drawer.drawManager(newEntity);
+    var process = drawer.drawManager(newEntity);
+    SwtRunnable.execNowOrAsync(()->
+      EclipseUiUtil.openEditor(process)
+    );
   }
 
   String getSelectedSourceProjectName() {
