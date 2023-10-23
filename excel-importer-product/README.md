@@ -4,7 +4,17 @@ Imports Excel sheets and transforms it into a full featured web application.
 
 ## Demo
 
-TBD
+1. Initiate the Excel imported via menu `File` > `Import` > `Axon Ivy` > `App Dialog from Excel`.
+![importer](doc/excel-import-entry.png)
+
+2. Pick a project, where the Excel records should imported to as Entity with a Dialog.
+![wizard](doc/target-project-unit.png)
+
+3. The importer will create the EntityClass, that represents entries in the Database.
+![generated-entity](doc/generate-entity-from-excel.png)
+
+4. A simple process will be creatd, leading to a Dialog to explore your imported Entities.
+![final-dialog](doc/entity-dialog.png)
 
 ## Setup
 
