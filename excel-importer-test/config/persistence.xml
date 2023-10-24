@@ -3,7 +3,7 @@
     <persistence-unit name="testing">
         <non-jta-data-source>inMemory</non-jta-data-source>
         <properties>
-            <property name="hibernate.hbm2ddl.auto" value="create"/>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
             <property name="hibernate.show-sql" value="true"/>
         </properties>
     </persistence-unit>
