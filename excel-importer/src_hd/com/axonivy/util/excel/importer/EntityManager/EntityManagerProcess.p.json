@@ -88,5 +88,51 @@
       "visual" : {
         "at" : { "x" : 224, "y" : 224 }
       }
+    }, {
+      "id" : "f11",
+      "type" : "HtmlDialogMethodStart",
+      "name" : "edit(MyEntity)",
+      "config" : {
+        "callSignature" : "edit",
+        "input" : {
+          "params" : [
+            { "name" : "entity", "type" : "com.axonivy.util.excel.importer.MyEntity" }
+          ],
+          "map" : {
+            "out.edit" : "param.entity"
+          }
+        },
+        "guid" : "18B62027AEABD10C"
+      },
+      "visual" : {
+        "at" : { "x" : 96, "y" : 288 }
+      },
+      "connect" : { "id" : "f13", "to" : "f12" }
+    }, {
+      "id" : "f12",
+      "type" : "HtmlDialogEnd",
+      "visual" : {
+        "at" : { "x" : 224, "y" : 288 }
+      }
+    }, {
+      "id" : "f14",
+      "type" : "HtmlDialogEventStart",
+      "name" : "save",
+      "config" : {
+        "guid" : "18B6204794B9E8F8",
+        "output" : {
+          "code" : "ivy.persistence.myUnit.merge(out.edit);"
+        }
+      },
+      "visual" : {
+        "at" : { "x" : 96, "y" : 352 }
+      },
+      "connect" : { "id" : "f16", "to" : "f15" }
+    }, {
+      "id" : "f15",
+      "type" : "HtmlDialogEnd",
+      "visual" : {
+        "at" : { "x" : 224, "y" : 352 }
+      }
     } ]
 }

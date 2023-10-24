@@ -23,7 +23,12 @@
             <!-- [entity.fields] -->
             
             <p:column headerText="action">
-              <p:commandButton id="delete" actionListener="#{logic.delete(entity)}" value="Delete" update="form" icon="pi pi-trash" />
+              <p:commandLink id="add" global="false" action="EntityDetail" actionListener="#{logic.edit(entity)}">							
+                 <h:outputText styleClass="pi pi-eye"  />
+              </p:commandLink> 
+              <p:commandLink id="delete" actionListener="#{logic.delete(entity)}" update="form">
+                 <h:outputText styleClass="pi pi-trash"  />
+              </p:commandLink>
             </p:column>
             
           </p:dataTable>
