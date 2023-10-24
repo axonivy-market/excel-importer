@@ -57,9 +57,12 @@ public class EntityClassReader {
   }
 
   private String fieldName(String colName) {
+    colName = colName.replaceAll(" ", "");
     if (StringUtils.isAllUpperCase(colName)) {
       return colName.toLowerCase();
     }
+    colName = colName.replaceAll("\\W", "");
+    colName = colName.replaceAll("[^\\p{ASCII}]", "");
     return StringUtils.uncapitalize(colName);
   }
 
