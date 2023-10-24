@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +25,7 @@ import ch.ivyteam.ivy.environment.IvyTest;
 import ch.ivyteam.ivy.process.model.Process;
 import ch.ivyteam.ivy.process.model.element.activity.Script;
 import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogMethodStart;
+import ch.ivyteam.ivy.process.model.element.value.Mappings;
 import ch.ivyteam.ivy.scripting.dataclass.IDataClass;
 import ch.ivyteam.ivy.scripting.dataclass.IDataClassField;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
@@ -53,6 +55,8 @@ public class TestDialogCreator {
       assertData(dialog.getDataClass(null));
       assertProcess(customer, dialog.getProcess(null).getModel());
       assertView(read(dialog.getViewFile()));
+      var udRoot = (IFolder) dialog.getResource();
+      assertDetailView(read(udRoot.getFile("EntityDetail.xhtml")));
 
     } finally {
       customer.getResource().delete(true, new NullProgressMonitor());
@@ -70,14 +74,27 @@ public class TestDialogCreator {
   private void assertProcess(IEntityClass customer, Process process) {
     Script loader = process.search().type(Script.class).findOne();
     assertThat(loader.getCode()).contains(customer.getName());
-    var delete = process.search().type(HtmlDialogMethodStart.class).findOne();
+
+    var delete = process.search().type(HtmlDialogMethodStart.class).name("delete(customer)").findOne();
     String removal = delete.getOutput().getCode();
     assertThat(removal)
       .contains("testing.remove(");
+
+    var edit = process.search().type(HtmlDialogMethodStart.class).name("edit(customer)").findOne();
+    Mappings mappings = edit.getOutput().getMappings();
+    assertThat(mappings.asList())
+      .hasSize(1);
   }
 
   private void assertView(String view) {
     assertThat(view).contains("p:dataTable");
+    assertThat(view)
+      .as("visualizes properties of the entity")
+      .contains("firstname")
+      .doesNotContain("<!-- [entity.fields] -->");
+  }
+
+  private void assertDetailView(String view) {
     assertThat(view)
       .as("visualizes properties of the entity")
       .contains("firstname")

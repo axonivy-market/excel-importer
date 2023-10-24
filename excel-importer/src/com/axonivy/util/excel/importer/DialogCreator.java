@@ -6,9 +6,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 
 import ch.ivyteam.ivy.IvyConstants;
@@ -57,8 +59,17 @@ public class DialogCreator {
     processRdm.save();
 
     extendView(userDialog.getViewFile(), entity);
+    detailView(userDialog, entity);
 
     return userDialog;
+  }
+
+  private void detailView(IUserDialog userDialog, IEntityClass entity) {
+    String template = readTemplate("EntityDetail.xhtml");
+    String rendered = renderFields(entity, template, this::renderDetail);
+    var dir = (IFolder) userDialog.getResource();
+    var detailView = dir.getFile("EntityDetail.xhtml");
+    write(detailView, rendered);
   }
 
   private void prepareTemplate(IProject project, String template) {
@@ -74,24 +85,34 @@ public class DialogCreator {
   }
 
   private void extendView(IFile viewFile, IEntityClass entity) {
-    try(InputStream is = DialogCreator.class.getResourceAsStream("/com/axonivy/util/excel/importer/EntityManager/EntityManager.xhtml")) {
+    String template = readTemplate("EntityManager.xhtml");
+    String rendered = renderFields(entity, template, this::renderColumn);
+    write(viewFile, rendered);
+  }
+
+  private static String readTemplate(String resource) {
+    try(InputStream is = DialogCreator.class.getResourceAsStream("/com/axonivy/util/excel/importer/EntityManager/"+resource)) {
       var bos = new ByteArrayOutputStream();
       is.transferTo(bos);
       var template = new String(bos.toByteArray());
-
-      String rendered = renderFields(entity, template);
-
-      var bis = new ByteArrayInputStream(rendered.getBytes());
-      viewFile.setContents(bis, 0, null);
+      return template;
     } catch (Exception ex) {
-      throw new RuntimeException("Failed to extend view for "+viewFile, ex);
+      throw new RuntimeException("Failed to read template "+resource);
     }
   }
 
-  private String renderFields(IEntityClass entity, String template) {
+  private static void write(IFile view, String content) {
+    try(var bis = new ByteArrayInputStream(content.getBytes())){
+      view.setContents(bis, 0, null);
+    } catch (Exception ex) {
+      throw new RuntimeException("Failed to extend view for "+view, ex);
+    }
+  }
+
+  private String renderFields(IEntityClass entity, String template, Function<IEntityClassField, String> renderer) {
     String fieldXhtml = entity.getFields().stream()
       .filter(fld -> !fld.getName().equals("id"))
-      .map(this::renderColumn)
+      .map(renderer)
       .collect(Collectors.joining("\n"));
     return template.replace("<!-- [entity.fields] -->", fieldXhtml);
   }
@@ -102,6 +123,14 @@ public class DialogCreator {
           <h:outputText value="#{entity.%s}"/>
         </p:column>
     """.formatted(field.getName(), field.getName());
+    return fieldXhtml;
+  }
+
+  private String renderDetail(IEntityClassField field) {
+    String fieldXhtml = """
+        <p:outputLabel for="FIELD" value="FIELD" />
+        <p:inputText id="FIELD" value="#{data.edit.FIELD}"></p:inputText>
+    """.replaceAll("FIELD", field.getName());
     return fieldXhtml;
   }
 
