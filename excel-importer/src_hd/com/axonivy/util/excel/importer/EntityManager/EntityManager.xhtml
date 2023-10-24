@@ -15,7 +15,7 @@
         <p:messages />
           <p:panelGrid columns="1" layout="grid" styleClass="ui-panelgrid-blank ui-fluid">
 
-          <p:dataTable id="entities" var="entity" value="#{data.entries}">
+          <p:dataTable id="entities" var="entity" value="#{data.entries}" paginator="true" rows="100">
             <p:column headerText="id">
               <h:outputText value="#{entity.id}"/>
             </p:column>

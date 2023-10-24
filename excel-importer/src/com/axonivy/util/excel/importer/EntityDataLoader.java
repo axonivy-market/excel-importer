@@ -56,15 +56,14 @@ public class EntityDataLoader {
   }
 
   private void insertCallValuesAsParameter(List<? extends IEntityClassField> fields, Row row, Query insert) {
-    Iterator<Cell> cells = row.cellIterator();
-    int c = 0;
-    c++; // consumed by 'id'
-    while(cells.hasNext()) {
-      Cell cell = cells.next();
-      IEntityClassField field = fields.get(c);
-      String column = field.getName();
-      insert.setParameter(column, getValue(cell));
+    int c = -1;
+    for(var field : fields) {
       c++;
+      if (field.getName().equals("id")) {
+        continue;
+      }
+      Cell cell = row.getCell(c);
+      insert.setParameter(field.getName(), getValue(cell));
     }
   }
 
@@ -93,6 +92,9 @@ public class EntityDataLoader {
   }
 
   private Object getValue(Cell cell) {
+    if (cell == null) {
+      return null;
+    }
     if (cell.getCellType() == CellType.NUMERIC)  {
       return cell.getNumericCellValue();
     }
