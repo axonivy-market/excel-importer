@@ -41,13 +41,14 @@ public class DialogCreator {
     var target = dialogStartFor(entity);
 
     VariableDesc entries = new VariableDesc("entries", new QualifiedType(List.class.getName(), List.of(new QualifiedType(entity.getName()))));
+    VariableDesc edit = new VariableDesc("edit", new QualifiedType(entity.getName()));
 
     prepareTemplate(project, "frame-10");
     String dialogId = target.getId().getRawId();
     var params = new DialogCreationParameters.Builder(project, dialogId)
       .viewTechId(IvyConstants.VIEW_TECHONOLOGY_JSF)
       .signature(target.getStartMethod())
-      .dataClassFields(List.of(entries))
+      .dataClassFields(List.of(entries, edit))
       .toCreationParams();
     var userDialog = local.createProjectUserDialog(params, null);
 
@@ -90,12 +91,12 @@ public class DialogCreator {
   private String renderFields(IEntityClass entity, String template) {
     String fieldXhtml = entity.getFields().stream()
       .filter(fld -> !fld.getName().equals("id"))
-      .map(this::htmlview)
+      .map(this::renderColumn)
       .collect(Collectors.joining("\n"));
     return template.replace("<!-- [entity.fields] -->", fieldXhtml);
   }
 
-  private String htmlview(IEntityClassField field) {
+  private String renderColumn(IEntityClassField field) {
     String fieldXhtml = """
         <p:column headerText="%s">
           <h:outputText value="#{entity.%s}"/>

@@ -24,6 +24,8 @@ import ch.ivyteam.ivy.environment.IvyTest;
 import ch.ivyteam.ivy.process.model.Process;
 import ch.ivyteam.ivy.process.model.element.activity.Script;
 import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogMethodStart;
+import ch.ivyteam.ivy.scripting.dataclass.IDataClass;
+import ch.ivyteam.ivy.scripting.dataclass.IDataClassField;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 
 @IvyTest
@@ -48,20 +50,9 @@ public class TestDialogCreator {
       String unit = "testing";
       dialog = new DialogCreator().createDialog(customer, unit);
 
-      Process process = dialog.getProcess(null).getModel();
-      Script loader = process.search().type(Script.class).findOne();
-      assertThat(loader.getCode()).contains(customer.getName());
-      var delete = process.search().type(HtmlDialogMethodStart.class).findOne();
-      String removal = delete.getOutput().getCode();
-      assertThat(removal)
-        .contains("testing.remove(");
-      
-      var view = read(dialog.getViewFile());
-      assertThat(view).contains("p:dataTable");
-      assertThat(view)
-        .as("visualizes properties of the entity")
-        .contains("firstname")
-        .doesNotContain("<!-- [entity.fields] -->");
+      assertData(dialog.getDataClass(null));
+      assertProcess(customer, dialog.getProcess(null).getModel());
+      assertView(read(dialog.getViewFile()));
 
     } finally {
       customer.getResource().delete(true, new NullProgressMonitor());
@@ -69,6 +60,28 @@ public class TestDialogCreator {
         dialog.getResource().delete(true, null);
       }
     }
+  }
+
+  private void assertData(IDataClass dataClass) {
+    assertThat(dataClass.getFields()).extracting(IDataClassField::getName)
+      .containsOnly("entries", "edit");
+  }
+
+  private void assertProcess(IEntityClass customer, Process process) {
+    Script loader = process.search().type(Script.class).findOne();
+    assertThat(loader.getCode()).contains(customer.getName());
+    var delete = process.search().type(HtmlDialogMethodStart.class).findOne();
+    String removal = delete.getOutput().getCode();
+    assertThat(removal)
+      .contains("testing.remove(");
+  }
+
+  private void assertView(String view) {
+    assertThat(view).contains("p:dataTable");
+    assertThat(view)
+      .as("visualizes properties of the entity")
+      .contains("firstname")
+      .doesNotContain("<!-- [entity.fields] -->");
   }
 
   private static String read(IFile viewFile) throws IOException, CoreException {
