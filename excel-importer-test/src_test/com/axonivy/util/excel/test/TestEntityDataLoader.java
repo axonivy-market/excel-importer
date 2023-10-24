@@ -51,6 +51,27 @@ public class TestEntityDataLoader {
       customer.getResource().delete(true, new NullProgressMonitor());
     }
   }
+  
+  @Test
+  void loadArznei(@TempDir Path dir) throws IOException, CoreException {
+    Path path = dir.resolve("meds.xlsx");
+    TstRes.loadTo(path, "ArzneimittelLight.xlsx");
+
+    Workbook wb = ExcelLoader.load(path);
+    Sheet customerSheet = wb.getSheetAt(0);
+
+    IEntityClass customer = reader.toEntity(customerSheet, "meds");
+    try {
+      customer.save(new NullProgressMonitor());
+      Class<?> entity = loader.createTable(customer);
+      assertThat(unit.findAll(entity)).isEmpty();
+      loader.load(customerSheet, customer);
+      List<?> records = unit.findAll(entity);
+      assertThat(records).hasSizeGreaterThanOrEqualTo(2);
+    } finally {
+      customer.getResource().delete(true, new NullProgressMonitor());
+    }
+  }
 
   @BeforeEach
   void setup() {
