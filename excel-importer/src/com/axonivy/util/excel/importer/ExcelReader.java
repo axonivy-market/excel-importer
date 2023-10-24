@@ -51,7 +51,7 @@ public class ExcelReader {
   private static Column toColumn(String name, CellType type) {
     switch (type) {
       case NUMERIC:
-        return new Column(name, Float.class);
+        return new Column(name, Double.class);
       case STRING:
         return new Column(name, String.class);
       case BOOLEAN:

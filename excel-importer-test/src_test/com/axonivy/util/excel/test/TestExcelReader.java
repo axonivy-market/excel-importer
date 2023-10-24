@@ -26,8 +26,8 @@ class TestExcelReader {
       .contains("Firstname", "Lastname");
     assertThat(columns).contains(
       new Column("Firstname", String.class),
-      new Column("ZIP", Float.class),
-      new Column("Birthdate", Float.class) // should be a date
+      new Column("ZIP", Double.class),
+      new Column("Birthdate", Double.class) // should be a date
     );
   }
 
