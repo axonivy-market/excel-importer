@@ -28,7 +28,7 @@ public class TestEntityClassCreator {
     var entity = reader.getEntity(path);
     assertThat(entity).isNotNull();
   }
-  
+
   @Test
   void readGermanized(@TempDir Path dir) throws Exception {
     Path path = dir.resolve("Arzneimittel.xlsx");
@@ -44,6 +44,9 @@ public class TestEntityClassCreator {
         .doesNotContain("(")
         .doesNotContain("ä");
     }
+    assertThat(entity.getField("anzahlInneresBehltnis").getComment())
+      .as("preserve real column names")
+      .isEqualTo("Anzahl Inneres Behältnis");
   }
 
   @BeforeEach

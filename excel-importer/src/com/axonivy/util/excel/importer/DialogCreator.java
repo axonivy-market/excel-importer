@@ -69,7 +69,11 @@ public class DialogCreator {
     String rendered = renderFields(entity, template, this::renderDetail);
     var dir = (IFolder) userDialog.getResource();
     var detailView = dir.getFile("EntityDetail.xhtml");
-    write(detailView, rendered);
+    try(InputStream bis = new ByteArrayInputStream(rendered.getBytes())) {
+      detailView.create(bis, true, null);
+    } catch (Exception ex) {
+      throw new RuntimeException("Failed to write detail view "+detailView, ex);
+    }
   }
 
   private void prepareTemplate(IProject project, String template) {
@@ -122,15 +126,17 @@ public class DialogCreator {
         <p:column headerText="%s">
           <h:outputText value="#{entity.%s}"/>
         </p:column>
-    """.formatted(field.getName(), field.getName());
+    """.formatted(field.getComment(), field.getName());
     return fieldXhtml;
   }
 
   private String renderDetail(IEntityClassField field) {
     String fieldXhtml = """
-        <p:outputLabel for="FIELD" value="FIELD" />
+        <p:outputLabel for="FIELD" value="LABEL" />
         <p:inputText id="FIELD" value="#{data.edit.FIELD}"></p:inputText>
-    """.replaceAll("FIELD", field.getName());
+    """
+      .replaceAll("FIELD", field.getName())
+      .replaceAll("LABEL", field.getComment());
     return fieldXhtml;
   }
 
