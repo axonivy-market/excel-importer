@@ -43,7 +43,7 @@ public class EntityDataLoader {
     try {
       rows.forEachRemaining(row -> {
         Query insert = em.createNativeQuery(query);
-        insert.setParameter("id", rCount.incrementAndGet());
+        insert.setParameter("id", rCount.getAndIncrement());
         insertCallValuesAsParameter(fields, row, insert);
         var inserted = insert.executeUpdate();
         System.out.println("updateded "+inserted+" records");
