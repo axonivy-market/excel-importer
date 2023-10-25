@@ -2,11 +2,13 @@ package com.axonivy.util.excel.importer;
 
 import java.util.List;
 
+import ch.ivyteam.ivy.process.model.NodeElement;
 import ch.ivyteam.ivy.process.model.Process;
 import ch.ivyteam.ivy.process.model.diagram.shape.DiagramShape;
 import ch.ivyteam.ivy.process.model.diagram.value.Position;
 import ch.ivyteam.ivy.process.model.diagram.value.PositionDelta;
 import ch.ivyteam.ivy.process.model.element.activity.Script;
+import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogEventStart;
 import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogMethodStart;
 import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogStart;
 import ch.ivyteam.ivy.process.model.element.event.start.value.CallSignature;
@@ -36,6 +38,7 @@ public class DialogProcess {
     addDbLoaderScript();
     addDeleteAction();
     addEditAction();
+    addSaveAction();
   }
 
   private void addDbLoaderScript() {
@@ -86,11 +89,28 @@ public class DialogProcess {
     edit.setOutput(new MappingCode(Mappings.single("out.edit", "param.entity")));
   }
 
+  private void addSaveAction() {
+    var save = addEvent();
+    save.setName("save");
+    String doSave = """
+      ivy.persistence.%s.merge(out.edit);
+      """.formatted(unit);
+    save.setOutput(new MappingCode(doSave));
+  }
+
   private HtmlDialogMethodStart addMethod() {
-    var delete = process.add().element(HtmlDialogMethodStart.class);
-    delete.getShape().moveTo(new Position(x, y));
-    y += 120;
-    return delete;
+    return addAction(HtmlDialogMethodStart.class);
+  }
+
+  private HtmlDialogEventStart addEvent() {
+    return addAction(HtmlDialogEventStart.class);
+  }
+
+  private <T extends NodeElement> T addAction(Class<T> type) {
+    var action = process.add().element(type);
+    action.getShape().moveTo(new Position(x, y));
+    y += 80;
+    return action;
   }
 
 }
