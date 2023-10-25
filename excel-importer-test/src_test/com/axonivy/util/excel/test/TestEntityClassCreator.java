@@ -47,6 +47,11 @@ public class TestEntityClassCreator {
     assertThat(entity.getField("anzahlInneresBehltnis").getComment())
       .as("preserve real column names")
       .isEqualTo("Anzahl Inneres Behältnis");
+
+    assertThat(entity.getField("zulassungsinhaberName").getType())
+      .isEqualTo(String.class.getName());
+    assertThat(entity.getField("pNRZulassungsinhaber").getType())
+      .isEqualTo(Double.class.getName());
   }
 
   @BeforeEach
