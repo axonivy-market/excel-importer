@@ -38,6 +38,7 @@ public class DialogProcess {
     addDbLoaderScript();
     addDeleteAction();
     addEditAction();
+    addCreateAction();
     addSaveAction();
   }
 
@@ -89,12 +90,22 @@ public class DialogProcess {
     edit.setOutput(new MappingCode(Mappings.single("out.edit", "param.entity")));
   }
 
+  private void addCreateAction() {
+    var add = addEvent();
+    add.setName("add");
+    add.setOutput(new MappingCode(Mappings.single("out.edit", "new "+entity.getName()+"()")));
+  }
+
   private void addSaveAction() {
     var save = addEvent();
     save.setName("save");
     String doSave = """
-      ivy.persistence.%s.merge(out.edit);
-      """.formatted(unit);
+      if (out.edit.id < 1) {
+        ivy.persistence.UNIT.persist(out.edit);
+      } else {
+        ivy.persistence.UNIT.merge(out.edit);
+      }
+      """.replaceAll("UNIT", unit);
     save.setOutput(new MappingCode(doSave));
   }
 

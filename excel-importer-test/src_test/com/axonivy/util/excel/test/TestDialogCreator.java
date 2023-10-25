@@ -89,6 +89,10 @@ public class TestDialogCreator {
     var save = process.search().type(HtmlDialogEventStart.class).name("save").findOne();
     assertThat(save.getOutput().getCode())
       .contains("ivy.persistence.testing.merge(out.edit)");
+
+    var add = process.search().type(HtmlDialogEventStart.class).name("add").findOne();
+    assertThat(add.getOutput().getMappings().asList().get(0).getRightSide())
+      .contains("new "+customer.getName()+"()");
   }
 
   private void assertView(String view) {
