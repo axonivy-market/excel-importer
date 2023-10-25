@@ -19,10 +19,12 @@ import ch.ivyteam.ivy.process.data.persistence.IIvyEntityManager;
 import ch.ivyteam.ivy.project.IIvyProjectManager;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClassField;
+import ch.ivyteam.log.Logger;
 
 @SuppressWarnings("restriction")
 public class EntityDataLoader {
 
+  private static final Logger LOGGER = Logger.getLogger(EntityDataLoader.class);
   private final IIvyEntityManager manager;
 
   public EntityDataLoader(IIvyEntityManager manager) {
@@ -43,10 +45,14 @@ public class EntityDataLoader {
     try {
       rows.forEachRemaining(row -> {
         Query insert = em.createNativeQuery(query);
-        insert.setParameter("id", rCount.getAndIncrement());
+        rCount.incrementAndGet();
         insertCallValuesAsParameter(fields, row, insert);
-        var inserted = insert.executeUpdate();
-        System.out.println("updateded "+inserted+" records");
+        try {
+          var inserted = insert.executeUpdate();
+          System.out.println("updateded "+inserted+" records");
+        } catch (Exception ex) {
+          LOGGER.error("Failed to insert "+insert);
+        }
       });
     } finally {
       System.out.println("inserted " + rCount + " rows");
@@ -56,21 +62,27 @@ public class EntityDataLoader {
   }
 
   private void insertCallValuesAsParameter(List<? extends IEntityClassField> fields, Row row, Query insert) {
-    int c = -1;
+    int c = 0;
     for(var field : fields) {
-      c++;
       if (field.getName().equals("id")) {
         continue;
       }
+      String name = field.getName();
       Cell cell = row.getCell(c);
-      insert.setParameter(field.getName(), getValue(cell));
+      Object value = getValue(cell);
+      insert.setParameter(name, value);
+      c++;
     }
   }
 
   private String buildInsertQuery(IEntityClass entity, List<? extends IEntityClassField> fields) {
-    String colNames = fields.stream().map(IEntityClassField::getName).collect(Collectors.joining(","));
+    String colNames = fields.stream().map(IEntityClassField::getName)
+      .filter(fld -> !fld.equals("id"))
+      .collect(Collectors.joining(","));
     var query = new StringBuilder("INSERT INTO "+entity.getSimpleName()+" ("+colNames+")\nVALUES (");
-    var params = fields.stream().map(IEntityClassField::getName).map(f -> ":"+f+"").collect(Collectors.joining(", "));
+    var params = fields.stream().map(IEntityClassField::getName)
+      .filter(fld -> !fld.equals("id"))
+      .map(f -> ":"+f+"").collect(Collectors.joining(", "));
     query.append(params);
     query.append(")");
     return query.toString();
