@@ -24,6 +24,7 @@ import ch.ivyteam.ivy.dialog.configuration.IUserDialog;
 import ch.ivyteam.ivy.environment.IvyTest;
 import ch.ivyteam.ivy.process.model.Process;
 import ch.ivyteam.ivy.process.model.element.activity.Script;
+import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogEventStart;
 import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogMethodStart;
 import ch.ivyteam.ivy.process.model.element.value.Mappings;
 import ch.ivyteam.ivy.scripting.dataclass.IDataClass;
@@ -84,6 +85,10 @@ public class TestDialogCreator {
     Mappings mappings = edit.getOutput().getMappings();
     assertThat(mappings.asList())
       .hasSize(1);
+
+    var save = process.search().type(HtmlDialogEventStart.class).name("save").findOne();
+    assertThat(save.getOutput().getCode())
+      .contains("ivy.persistence.testing.merge(out.edit)");
   }
 
   private void assertView(String view) {
