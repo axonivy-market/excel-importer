@@ -121,7 +121,13 @@
       "config" : {
         "guid" : "18B6204794B9E8F8",
         "output" : {
-          "code" : "ivy.persistence.myUnit.merge(out.edit);"
+          "code" : [
+            "if (out.edit.id < 1) {",
+            "  ivy.persistence.myUnit.persist(out.edit);",
+            "} else {",
+            "  ivy.persistence.myUnit.merge(out.edit);",
+            "}"
+          ]
         }
       },
       "visual" : {
@@ -133,6 +139,29 @@
       "type" : "HtmlDialogEnd",
       "visual" : {
         "at" : { "x" : 224, "y" : 352 }
+      }
+    }, {
+      "id" : "f17",
+      "type" : "HtmlDialogEventStart",
+      "name" : "add",
+      "config" : {
+        "guid" : "18B65DD28ACDAFDE",
+        "output" : {
+          "map" : {
+            "out" : "in",
+            "out.edit" : "new com.axonivy.util.excel.importer.MyEntity()"
+          }
+        }
+      },
+      "visual" : {
+        "at" : { "x" : 96, "y" : 416 }
+      },
+      "connect" : { "id" : "f19", "to" : "f18" }
+    }, {
+      "id" : "f18",
+      "type" : "HtmlDialogEnd",
+      "visual" : {
+        "at" : { "x" : 224, "y" : 416 }
       }
     } ]
 }
