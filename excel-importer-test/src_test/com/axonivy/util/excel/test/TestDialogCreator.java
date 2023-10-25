@@ -99,6 +99,9 @@ public class TestDialogCreator {
       .as("visualizes properties of the entity")
       .contains("firstname")
       .doesNotContain("<!-- [entity.fields] -->");
+    assertThat(view)
+      .as("navigation to list must be adapted by the template renderer")
+      .doesNotContain("action=\"EntityList\"");
   }
 
   private static String read(IFile viewFile) throws IOException, CoreException {
