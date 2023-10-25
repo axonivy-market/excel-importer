@@ -100,8 +100,16 @@ public class DialogProcess {
     var save = addEvent();
     save.setName("save");
     String doSave = """
-      ivy.persistence.UNIT.merge(out.edit);
-      """.replaceAll("UNIT", unit);
+      if (!out.edit.#id is initialized) {
+        out.edit = ivy.persistence.UNIT.persist(out.edit) as ENTITY;
+        out.entries.add(out.edit);
+      } else {
+        ivy.persistence.UNIT.merge(out.edit);
+      }
+      out.edit = null;
+      """
+        .replaceAll("UNIT", unit)
+        .replaceAll("ENTITY", entity.getName());
     save.setOutput(new MappingCode(doSave));
   }
 
