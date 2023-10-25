@@ -66,7 +66,11 @@ public class DialogCreator {
 
   private void detailView(IUserDialog userDialog, IEntityClass entity) {
     String template = readTemplate("EntityDetail.xhtml");
+
     String rendered = renderFields(entity, template, this::renderDetail);
+    rendered = rendered.replaceAll("action=\"EntityList\"",
+      "action=\"%s\"".formatted(entity.getSimpleName()+"Manager"));
+
     var dir = (IFolder) userDialog.getResource();
     var detailView = dir.getFile("EntityDetail.xhtml");
     try(InputStream bis = new ByteArrayInputStream(rendered.getBytes())) {
