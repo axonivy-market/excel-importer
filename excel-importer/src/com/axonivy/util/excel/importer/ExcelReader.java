@@ -5,7 +5,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
@@ -36,20 +35,19 @@ public class ExcelReader {
       return List.of();
     }
     Row row = rowIterator.next();
-    Iterator<Cell> cellIterator = row.cellIterator();
-    int cellNo = 0;
-    while (cellIterator.hasNext()) {
-      Cell cell = cellIterator.next();
-      var name = names.get(cellNo);
-      var column = toColumn(name, cell.getCellType());
+    for(int c = 0; c<row.getLastCellNum(); c++) {
+      var name = names.get(c);
+      var column = toColumn(name, row.getCell(c));
       columns.add(column);
-      cellNo++;
     }
     return columns;
   }
 
-  private static Column toColumn(String name, CellType type) {
-    switch (type) {
+  private static Column toColumn(String name, Cell cell) {
+    if (cell == null) {
+      return new Column(name, String.class); // type not known on first row
+    }
+    switch (cell.getCellType()) {
       case NUMERIC:
         return new Column(name, Double.class);
       case STRING:

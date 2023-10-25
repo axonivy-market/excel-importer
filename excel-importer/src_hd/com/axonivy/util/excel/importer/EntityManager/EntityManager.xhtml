@@ -16,6 +16,11 @@
           <p:panelGrid columns="1" layout="grid" styleClass="ui-panelgrid-blank ui-fluid">
 
           <p:dataTable id="entities" var="entity" value="#{data.entries}" paginator="true" rows="100">
+            <f:facet name="header">
+              <p:commandLink id="addProduct" value="Add" global="false" action="EntityDetail" actionListener="#{logic.add}" >
+                  <h:outputText styleClass="pi pi-plus" /> 
+              </p:commandLink>
+            </f:facet>
             <p:column headerText="id">
               <h:outputText value="#{entity.id}"/>
             </p:column>
@@ -23,7 +28,12 @@
             <!-- [entity.fields] -->
             
             <p:column headerText="action">
-              <p:commandButton id="delete" actionListener="#{logic.delete(entity)}" value="Delete" update="form" icon="pi pi-trash" />
+              <p:commandLink id="add" global="false" action="EntityDetail" actionListener="#{logic.edit(entity)}">							
+                 <h:outputText styleClass="pi pi-eye"  />
+              </p:commandLink> 
+              <p:commandLink id="delete" actionListener="#{logic.delete(entity)}" update="form">
+                 <h:outputText styleClass="pi pi-trash"  />
+              </p:commandLink>
             </p:column>
             
           </p:dataTable>

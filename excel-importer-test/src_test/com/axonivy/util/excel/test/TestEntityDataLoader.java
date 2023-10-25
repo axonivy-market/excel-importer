@@ -58,18 +58,18 @@ public class TestEntityDataLoader {
     TstRes.loadTo(path, "ArzneimittelLight.xlsx");
 
     Workbook wb = ExcelLoader.load(path);
-    Sheet customerSheet = wb.getSheetAt(0);
+    Sheet medSheet = wb.getSheetAt(0);
 
-    IEntityClass customer = reader.toEntity(customerSheet, "meds");
+    IEntityClass meds = reader.toEntity(medSheet, "meds");
     try {
-      customer.save(new NullProgressMonitor());
-      Class<?> entity = loader.createTable(customer);
+      meds.save(new NullProgressMonitor());
+      Class<?> entity = loader.createTable(meds);
       assertThat(unit.findAll(entity)).isEmpty();
-      loader.load(customerSheet, customer);
+      loader.load(medSheet, meds);
       List<?> records = unit.findAll(entity);
       assertThat(records).hasSizeGreaterThanOrEqualTo(2);
     } finally {
-      customer.getResource().delete(true, new NullProgressMonitor());
+      meds.getResource().delete(true, new NullProgressMonitor());
     }
   }
 
