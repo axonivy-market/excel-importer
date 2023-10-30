@@ -1,10 +1,9 @@
 package com.axonivy.util.excel.importer.wizard;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -101,15 +100,10 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     String entityName = StringUtils.substringBeforeLast(excel.name(), ".");
     entityName = StringUtils.capitalize(entityName);
 
-    String extension = "."+StringUtils.substringAfterLast(excel.name(), ".");
-    var tempFile = Files.createTempFile(entityName, extension);
-    try {
-      Files.copy(excel.read().inputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
-    } catch (Exception ex) {
-      throw new IOException("Failed to create temp file "+tempFile, ex);
+    Workbook wb = null;
+    try(InputStream is = excel.read().inputStream()) {
+      wb = ExcelLoader.load(excel.name(), excel.read().inputStream());
     }
-
-    Workbook wb = ExcelLoader.load(tempFile);
     Sheet sheet = wb.getSheetAt(0);
 
     var newEntity = new EntityClassReader(manager).toEntity(sheet, entityName);
