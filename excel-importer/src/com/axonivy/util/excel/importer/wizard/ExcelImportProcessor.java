@@ -101,8 +101,13 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     String entityName = StringUtils.substringBeforeLast(excel.name(), ".");
     entityName = StringUtils.capitalize(entityName);
 
-    var tempFile = Files.createTempFile(entityName, "."+StringUtils.substringAfterLast(excel.name(), "."));
-    Files.copy(excel.read().inputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
+    String extension = "."+StringUtils.substringAfterLast(excel.name(), ".");
+    var tempFile = Files.createTempFile(entityName, extension);
+    try {
+      Files.copy(excel.read().inputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
+    } catch (Exception ex) {
+      throw new IOException("Failed to create temp file "+tempFile, ex);
+    }
 
     Workbook wb = ExcelLoader.load(tempFile);
     Sheet sheet = wb.getSheetAt(0);
