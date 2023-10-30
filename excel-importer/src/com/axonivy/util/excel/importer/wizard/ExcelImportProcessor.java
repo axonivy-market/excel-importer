@@ -43,7 +43,6 @@ import ch.ivyteam.ivy.search.restricted.ProjectRelationSearchScope;
 import ch.ivyteam.util.io.resource.FileResource;
 import ch.ivyteam.util.io.resource.nio.NioFileSystemProvider;
 
-@SuppressWarnings("restriction")
 public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgress {
 
   private IIvyProject selectedSourceProject;

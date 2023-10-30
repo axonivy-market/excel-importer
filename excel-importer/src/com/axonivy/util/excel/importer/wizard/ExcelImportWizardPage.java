@@ -84,17 +84,6 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
   public void createControl(Composite parent) {
     this.ui = new ExcelUi(parent);
 
-    String[] destinations = getDialogSettings().getArray(ExcelImportUtil.DESTINATION_KEY);
-    if (destinations != null) {
-      ui.destinationNameField.setText(destinations[0]);
-      for (String destination : destinations) {
-        if (destination.endsWith(ExcelImportUtil.DEFAULT_EXTENSION)) {
-          ui.destinationNameField.add(destination);
-          handleInputChanged();
-        }
-      }
-    }
-
     for (String projectName : ExcelImportUtil.getIvyProjectNames()) {
       ui.sourceProjectField.add(projectName);
     }
@@ -111,6 +100,17 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
 
     setButtonLayoutData(ui.destinationBrowseButton);
     setControl(ui);
+
+    String[] destinations = getDialogSettings().getArray(ExcelImportUtil.DESTINATION_KEY);
+    if (destinations != null) {
+      ui.destinationNameField.setText(destinations[0]);
+      for (String destination : destinations) {
+        if (destination.endsWith(ExcelImportUtil.DEFAULT_EXTENSION)) {
+          ui.destinationNameField.add(destination);
+          handleInputChanged();
+        }
+      }
+    }
   }
 
   @Override
@@ -139,7 +139,7 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
     String newProject = ui.sourceProjectField.getText();
     var sameProject = Objects.equals(processor.getSelectedSourceProjectName(), newProject);
     status.merge(processor.setSource(newProject));
-    if (!sameProject) {
+    if (!sameProject || ui.persistence.getItemCount() == 0) {
       ui.persistence.setItems(processor.units().toArray(String[]::new)); // update
     }
 
