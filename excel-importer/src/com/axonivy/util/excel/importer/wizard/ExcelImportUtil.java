@@ -10,7 +10,6 @@ import ch.ivyteam.ivy.project.IIvyProject;
 import ch.ivyteam.ivy.project.IIvyProjectManager;
 import ch.ivyteam.ivy.project.IvyProjectNavigationUtil;
 
-@SuppressWarnings("restriction")
 final class ExcelImportUtil {
 
   static final String PAGE_ICON = "/resources/icons/cms_wizard_header.png";

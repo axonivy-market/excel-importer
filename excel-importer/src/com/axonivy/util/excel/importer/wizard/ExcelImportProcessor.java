@@ -1,10 +1,9 @@
 package com.axonivy.util.excel.importer.wizard;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -43,7 +42,6 @@ import ch.ivyteam.ivy.search.restricted.ProjectRelationSearchScope;
 import ch.ivyteam.util.io.resource.FileResource;
 import ch.ivyteam.util.io.resource.nio.NioFileSystemProvider;
 
-@SuppressWarnings("restriction")
 public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgress {
 
   private IIvyProject selectedSourceProject;
@@ -102,10 +100,10 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     String entityName = StringUtils.substringBeforeLast(excel.name(), ".");
     entityName = StringUtils.capitalize(entityName);
 
-    var tempFile = Files.createTempFile(entityName, "."+StringUtils.substringAfterLast(excel.name(), "."));
-    Files.copy(excel.read().inputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
-
-    Workbook wb = ExcelLoader.load(tempFile);
+    Workbook wb = null;
+    try(InputStream is = excel.read().inputStream()) {
+      wb = ExcelLoader.load(excel.name(), excel.read().inputStream());
+    }
     Sheet sheet = wb.getSheetAt(0);
 
     var newEntity = new EntityClassReader(manager).toEntity(sheet, entityName);
