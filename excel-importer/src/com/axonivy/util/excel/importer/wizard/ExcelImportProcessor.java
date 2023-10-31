@@ -98,6 +98,9 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
 
   private void importExcel(IProjectDataClassManager manager, FileResource excel, IProgressMonitor monitor) throws IOException {
     String fileName = excel.path().lastSegment();
+    if (fileName.contains("\\")) { // windows flaw in current .lastSegment() impl!
+      fileName = StringUtils.substringAfterLast(fileName, "\\");
+    }
     String entityName = StringUtils.substringBeforeLast(fileName, ".");
     entityName = StringUtils.capitalize(entityName);
 
@@ -142,7 +145,11 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
 
   public WizardStatus setImportFile(String text) {
     if (text != null) {
-      importFile = NioFileSystemProvider.create(Path.of("/")).root().file(text);
+      try {
+        importFile = NioFileSystemProvider.create(Path.of("/")).root().file(text);
+      } catch (Exception ex) {
+        return WizardStatus.createErrorStatus("Can't create file from "+text, ex);
+      }
     } else {
       importFile = null;
     }
