@@ -97,12 +97,13 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
   }
 
   private void importExcel(IProjectDataClassManager manager, FileResource excel, IProgressMonitor monitor) throws IOException {
-    String entityName = StringUtils.substringBeforeLast(excel.name(), ".");
+    String fileName = excel.path().lastSegment();
+    String entityName = StringUtils.substringBeforeLast(fileName, ".");
     entityName = StringUtils.capitalize(entityName);
 
     Workbook wb = null;
     try(InputStream is = excel.read().inputStream()) {
-      wb = ExcelLoader.load(excel.name(), excel.read().inputStream());
+      wb = ExcelLoader.load(fileName, excel.read().inputStream());
     }
     Sheet sheet = wb.getSheetAt(0);
 
