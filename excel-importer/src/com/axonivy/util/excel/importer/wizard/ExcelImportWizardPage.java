@@ -20,6 +20,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Widget;
 
 import ch.ivyteam.ivy.designer.ui.wizard.restricted.WizardStatus;
@@ -41,6 +42,7 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
   private static class ExcelUi extends Composite {
 
     public final Combo destinationNameField;
+    public final Text entity;
     public final Combo sourceProjectField;
     public final Button destinationBrowseButton;
     public final Combo persistence;
@@ -61,6 +63,14 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
       destinationNameField.setLayoutData(dataDest);
       destinationBrowseButton = new Button(this, 8);
       destinationBrowseButton.setText("Browse ...");
+
+      Label entityLabel = new Label(this, SWT.NONE);
+      entityLabel.setText("Entity");
+      this.entity = new Text(this, SWT.BORDER);
+      GridData entGrid = new GridData(768);
+      entGrid.widthHint = 250;
+      entGrid.horizontalSpan = 2;
+      entity.setLayoutData(entGrid);
 
       Label sourceLabel = new Label(this, 0);
       sourceLabel.setText("Project");
@@ -95,6 +105,8 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
     ui.destinationNameField.addListener(SWT.Selection, this);
     ui.destinationBrowseButton.addListener(SWT.Selection, this);
 
+    ui.entity.addListener(SWT.Modify, this);
+
     ui.persistence.addListener(SWT.Modify, this);
     ui.persistence.addListener(SWT.Selection, this);
 
@@ -103,11 +115,10 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
 
     String[] destinations = getDialogSettings().getArray(ExcelImportUtil.DESTINATION_KEY);
     if (destinations != null) {
-      ui.destinationNameField.setText(destinations[0]);
+      fileSelected(destinations[0]);
       for (String destination : destinations) {
         if (destination.endsWith(ExcelImportUtil.DEFAULT_EXTENSION)) {
           ui.destinationNameField.add(destination);
-          handleInputChanged();
         }
       }
     }
@@ -135,7 +146,7 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
     var status = WizardStatus.createOkStatus();
 
     status.merge(processor.setImportFile(ui.destinationNameField.getText()));
-
+    status.merge(processor.setEntityName(ui.entity.getText()));
     String newProject = ui.sourceProjectField.getText();
     var sameProject = Objects.equals(processor.getSelectedSourceProjectName(), newProject);
     status.merge(processor.setSource(newProject));
@@ -181,8 +192,23 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
     dialog.setFilterPath(currentSourceString);
     String selectedFileName = dialog.open();
     if (selectedFileName != null) {
-      ui.destinationNameField.setText(selectedFileName);
+      fileSelected(selectedFileName);
     }
+  }
+
+  private void fileSelected(String selectedFileName) {
+    ui.destinationNameField.setText(selectedFileName);
+    ui.entity.setText(proposeName(selectedFileName));
+  }
+
+  private static String proposeName(String selection) {
+    if (selection == null) {
+      return "";
+    }
+    String fileName = new File(selection).getName();
+    String entityName = StringUtils.substringBeforeLast(fileName, ".");
+    entityName = StringUtils.capitalize(entityName);
+    return entityName;
   }
 
   private boolean executeImport() {
