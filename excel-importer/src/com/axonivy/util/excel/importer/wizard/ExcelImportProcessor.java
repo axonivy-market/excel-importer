@@ -48,6 +48,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
   private FileResource importFile;
   private IStatus status = Status.OK_STATUS;
   private String selectedPersistence;
+  private String entityName;
 
   public ExcelImportProcessor(IStructuredSelection selection) {
     this.selectedSourceProject = ExcelImportUtil.getFirstNonImmutableIvyProject(selection);
@@ -97,16 +98,9 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
   }
 
   private void importExcel(IProjectDataClassManager manager, FileResource excel, IProgressMonitor monitor) throws IOException {
-    String fileName = excel.path().lastSegment();
-    if (fileName.contains("\\")) { // windows flaw in current .lastSegment() impl!
-      fileName = StringUtils.substringAfterLast(fileName, "\\");
-    }
-    String entityName = StringUtils.substringBeforeLast(fileName, ".");
-    entityName = StringUtils.capitalize(entityName);
-
     Workbook wb = null;
     try(InputStream is = excel.read().inputStream()) {
-      wb = ExcelLoader.load(fileName, excel.read().inputStream());
+      wb = ExcelLoader.load(excel.name(), excel.read().inputStream());
     }
     Sheet sheet = wb.getSheetAt(0);
 
@@ -154,6 +148,14 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
       importFile = null;
     }
     return validateImportFileExits();
+  }
+
+  public WizardStatus setEntityName(String name) {
+    this.entityName = name;
+    if (entityName.isBlank()) {
+      return WizardStatus.createErrorStatus("Need a valid name for the Data to import");
+    }
+    return WizardStatus.createOkStatus();
   }
 
   public WizardStatus setSource(String projectName) {
