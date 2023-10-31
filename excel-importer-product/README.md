@@ -22,6 +22,6 @@ In the project, where the Excel data should be managed:
 
 1. Create a persistence unit under `/config/persistence.xml`
 2. Add the properties
-  - `hibernate.hbm2ddl.auto=create` (to allow schema changes)
+  - `hibernate.hbm2ddl.auto=update` (to allow schema changes)
   - `hibernate.id.new_generator_mappings=false` (to use classic sequence)
 3. Set the Data source to a valid database. If there is none, set it up under `/config/databases.yaml`
