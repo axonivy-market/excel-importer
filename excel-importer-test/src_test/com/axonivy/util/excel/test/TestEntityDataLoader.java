@@ -2,13 +2,11 @@ package com.axonivy.util.excel.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +30,7 @@ public class TestEntityDataLoader {
   private IIvyEntityManager unit;
 
   @Test
-  void loadDataToEntity(@TempDir Path dir) throws IOException, CoreException {
+  void loadDataToEntity(@TempDir Path dir) throws Exception {
     Path path = dir.resolve("customers.xlsx");
     TstRes.loadTo(path, "sample.xlsx");
 
@@ -51,9 +49,9 @@ public class TestEntityDataLoader {
       customer.getResource().delete(true, new NullProgressMonitor());
     }
   }
-  
+
   @Test
-  void loadArznei(@TempDir Path dir) throws IOException, CoreException {
+  void loadArznei(@TempDir Path dir) throws Exception {
     Path path = dir.resolve("meds.xlsx");
     TstRes.loadTo(path, "ArzneimittelLight.xlsx");
 

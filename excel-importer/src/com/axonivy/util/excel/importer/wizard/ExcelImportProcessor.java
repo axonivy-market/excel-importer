@@ -1,6 +1,5 @@
 package com.axonivy.util.excel.importer.wizard;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
@@ -86,7 +85,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
         var manager = IDataClassManager.instance().getProjectDataModelFor(selectedSourceProject.getProject());
         try {
           importExcel(manager, importFile, m);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
           status = EclipseUtil.createErrorStatus(ex);
         }
       }, null, IWorkspace.AVOID_UPDATE, progress);
@@ -97,7 +96,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     }
   }
 
-  private void importExcel(IProjectDataClassManager manager, FileResource excel, IProgressMonitor monitor) throws IOException {
+  private void importExcel(IProjectDataClassManager manager, FileResource excel, IProgressMonitor monitor) throws Exception {
     Workbook wb = null;
     try(InputStream is = excel.read().inputStream()) {
       wb = ExcelLoader.load(excel.name(), excel.read().inputStream());

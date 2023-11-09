@@ -19,5 +19,6 @@ Require-Bundle: ch.ivyteam.ivy.scripting.dataclass,
  ch.ivyteam.lib.apache.commons.lang3,
  javax.persistence,
  ch.ivyteam.ivy.dialog.config,
- ch.ivyteam.ivy.dialog.jsf.ui
+ ch.ivyteam.ivy.dialog.jsf.ui,
+ ch.ivyteam.lib.hibernate.entitymanager
 Bundle-ActivationPolicy: lazy
