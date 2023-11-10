@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -65,6 +66,7 @@ public class EntityDataLoader {
     AtomicInteger rCount = new AtomicInteger();
     List<? extends IEntityClassField> fields = entity.getFields();
     var query = buildInsertQuery(entity, fields);
+    LOGGER.info("Prepared insert query: "+query);
     var stmt = con.prepareStatement(query, Statement.NO_GENERATED_KEYS);
     rows.forEachRemaining(row -> {
       try {
@@ -75,7 +77,7 @@ public class EntityDataLoader {
         throw new RuntimeException(ex);
       }
     });
-    System.out.println("Generated "+rCount+" inserts");
+    LOGGER.info("Generated "+rCount+" inserts");
     return stmt;
   }
 
@@ -96,7 +98,11 @@ public class EntityDataLoader {
     String colNames = fields.stream().map(IEntityClassField::getName)
       .filter(fld -> !fld.equals("id"))
       .collect(Collectors.joining(","));
-    var query = new StringBuilder("INSERT INTO "+entity.getSimpleName()+" ("+colNames+")\nVALUES (");
+    String tableName = entity.getDatabaseTableName();
+    if (StringUtils.isBlank(tableName)) {
+      tableName = entity.getSimpleName();
+    }
+    var query = new StringBuilder("INSERT INTO "+tableName+" ("+colNames+")\nVALUES (");
     var params = fields.stream().map(IEntityClassField::getName)
       .filter(fld -> !fld.equals("id"))
       .map(f -> ":"+f+"").collect(Collectors.joining(", "));
