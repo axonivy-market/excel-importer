@@ -50,10 +50,10 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
   private FileResource importFile;
   private IStatus status = Status.OK_STATUS;
 
-  private String selectedPersistence;
-  private String entityName;
-  private String projectName;
-  private String file;
+  private String selectedPersistence = "";
+  private String entityName = "";
+  private String projectName = "";
+  private String file = "";
 
   public ExcelImportProcessor(IStructuredSelection selection) {
     this.selectedSourceProject = ExcelImportUtil.getFirstNonImmutableIvyProject(selection);
@@ -73,7 +73,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
   public boolean wizardFinishInvoked() {
     var okStatus = WizardStatus.createOkStatus();
     okStatus.merge(validateImportFileExits());
-    okStatus.merge(validateSource());
+    okStatus.merge(validateProject());
     return okStatus.isLowerThan(WizardStatus.ERROR);
   }
 
@@ -179,7 +179,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     return validateEntity();
   }
 
-  private WizardStatus validateEntity() {
+  public WizardStatus validateEntity() {
     if (entityName.isBlank()) {
       return WizardStatus.createErrorStatus("Need a valid name for the Data to import");
     }
@@ -191,13 +191,13 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
   }
 
   public WizardStatus setProject(String projectName) {
-    this.projectName = projectName;
     if (projectName != null && !Objects.equals(projectName, this.projectName)) {
       selectedSourceProject = IIvyProjectManager.instance().getIvyProject(projectName);
     } else {
       selectedSourceProject = null;
     }
-    return validateSource();
+    this.projectName = projectName;
+    return validateProject();
   }
 
   public String getPersistence() {
@@ -213,21 +213,21 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     return status;
   }
 
-  private WizardStatus validateImportFileExits() {
+  public WizardStatus validateImportFileExits() {
     if (importFile == null || !importFile.exists()) {
-      return WizardStatus.createErrorStatus("Import file does not exist");
+      return WizardStatus.createErrorStatus("Import file "+importFile+" does not exist");
     }
     return WizardStatus.createOkStatus();
   }
 
-  private WizardStatus validateSource() {
+  public WizardStatus validateProject() {
     if (selectedSourceProject == null) {
       return WizardStatus.createErrorStatus("Please specify an Axon Ivy project");
     }
     return WizardStatus.createOkStatus();
   }
 
-  private WizardStatus validatePersistence() {
+  public WizardStatus validatePersistence() {
     if (selectedPersistence == null || !units().contains(selectedPersistence)) {
       return WizardStatus.createErrorStatus("Please specify a Persistence DB to store XLS data");
     }

@@ -5,172 +5,67 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jface.viewers.ComboViewer;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.Widget;
 
 import ch.ivyteam.ivy.designer.ui.wizard.restricted.WizardStatus;
 import ch.ivyteam.swt.dialogs.SwtCommonDialogs;
-import ch.ivyteam.ui.model.UiComboModel;
-import ch.ivyteam.ui.model.UiTextModel;
-import ch.ivyteam.ui.model.swt.SwtBinder;
 
-public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Listener {
+public class ExcelImportWizardPage extends WizardPage implements IWizardPage {
 
   static final String PAGE_ID = "ImportExcel";
   private final ExcelImportProcessor processor;
+
   private ExcelUi ui;
+  private UiState state;
 
   public ExcelImportWizardPage(ExcelImportProcessor processor) {
     super(PAGE_ID);
     setMessage(processor.getWizardPageOkMessage(PAGE_ID));
     this.processor = processor;
     setPageComplete(false);
-  }
-
-  private static class ExcelUi extends Composite {
-
-    public final ComboViewer destinationNameField;
-    public final Text entity;
-    public final ComboViewer sourceProjectField;
-    public final Button destinationBrowseButton;
-    public final ComboViewer persistence;
-
-    public ExcelUi(Composite parent) {
-      super(parent, SWT.NONE);
-
-      GridLayout layout = new GridLayout();
-      layout.numColumns = 3;
-      setLayout(layout);
-      setLayoutData(new GridData(272));
-
-      Label destinationLabel = new Label(this, 0);
-      destinationLabel.setText("From file");
-      destinationNameField = new ComboViewer(this, 2052);
-      var dataDest = new GridData(768);
-      dataDest.widthHint = 250;
-      destinationNameField.getCombo().setLayoutData(dataDest);
-      destinationBrowseButton = new Button(this, 8);
-      destinationBrowseButton.setText("Browse ...");
-
-      Label entityLabel = new Label(this, SWT.NONE);
-      entityLabel.setText("Entity");
-      this.entity = new Text(this, SWT.BORDER);
-      GridData entGrid = new GridData(768);
-      entGrid.widthHint = 250;
-      entGrid.horizontalSpan = 2;
-      entity.setLayoutData(entGrid);
-
-      Label sourceLabel = new Label(this, 0);
-      sourceLabel.setText("Project");
-      this.sourceProjectField = new ComboViewer(this, 2060);
-      GridData data = new GridData(768);
-      data.widthHint = 250;
-      data.horizontalSpan = 2;
-      sourceProjectField.getCombo().setLayoutData(data);
-
-      Label unitLabel = new Label(this, SWT.NONE);
-      unitLabel.setText("Persistence");
-      this.persistence = new ComboViewer(this, 2060);
-      GridData data3 = new GridData(768);
-      data3.widthHint = 250;
-      data3.horizontalSpan = 2;
-      persistence.getCombo().setLayoutData(data3);
-    }
-  }
-
-  public static class UiState {
-
-    private UiComboModel<String> file;
-    private UiComboModel<String> project;
-    private UiTextModel entity;
-    private UiComboModel<String> persistence;
-
-    public UiState(ExcelImportProcessor processor, Supplier<List<String>> history) {
-      this.file = new UiComboModel<>(processor::getImportFile, processor::setImportFile, history.get());
-      this.project = new UiComboModel<>(processor::getProjectName, processor::setProject, ExcelImportUtil.getIvyProjectNames());
-      this.entity = new UiTextModel(processor::getEntityName, processor::setEntityName);
-      this.persistence = new UiComboModel<>(processor::getPersistence, processor::setPersistence, processor.units());
-    }
-
-    public void bind(ExcelUi ui) {
-      var binder = new SwtBinder();
-      binder.bind(file).to(ui.destinationNameField);
-      binder.bind(entity).to(ui.entity);
-      binder.bind(project).to(ui.sourceProjectField);
-      binder.bind(persistence).to(ui.persistence);
-    }
-
+    this.state = new UiState(processor, ()->getImportHistory());
   }
 
   @Override
   public void createControl(Composite parent) {
     this.ui = new ExcelUi(parent);
 
-    for (String projectName : ExcelImportUtil.getIvyProjectNames()) {
-      ui.sourceProjectField.add(projectName);
-    }
-    Combo src = ui.sourceProjectField.getCombo();
-    src.setText(processor.getSelectedSourceProjectName());
-    src.addListener(SWT.Modify, this);
-    src.addListener(SWT.Selection, this);
+    ui.fileBrowser.addListener(SWT.Selection, evt -> handleDestinationBrowseButtonPressed());
 
-    Combo dst = ui.destinationNameField.getCombo();
-    dst.addListener(SWT.Modify, this);
-    dst.addListener(SWT.Selection, this);
-    ui.destinationBrowseButton.addListener(SWT.Selection, this);
-
-    ui.entity.addListener(SWT.Modify, this);
-
-    Combo persist = ui.persistence.getCombo();
-    persist.addListener(SWT.Modify, this);
-    persist.addListener(SWT.Selection, this);
-
-    setButtonLayoutData(ui.destinationBrowseButton);
+    setButtonLayoutData(ui.fileBrowser);
     setControl(ui);
 
     var history = getImportHistory();
     if (!history.isEmpty()) {
       fileSelected(history.get(0));
     }
-    history.stream().forEach(ui.destinationNameField::add);
+    history.stream().forEach(ui.importFile::add);
+
+   state.bind(ui);
+   state.watch(newVal -> handleInputChanged());
   }
 
   private List<String> getImportHistory() {
-    String[] destinations = getDialogSettings().getArray(ExcelImportUtil.DESTINATION_KEY);
+    IDialogSettings dialogSettings = getDialogSettings();
+    if (dialogSettings == null) {
+      return List.of();
+    }
+    String[] destinations = dialogSettings.getArray(ExcelImportUtil.DESTINATION_KEY);
     if (destinations == null) {
       return List.of();
     }
     return Stream.of(destinations)
       .filter(file -> file.endsWith(ExcelImportUtil.DEFAULT_EXTENSION))
       .toList();
-  }
-
-  @Override
-  public void handleEvent(Event event) {
-    Widget source = event.widget;
-    if (source.equals(ui.destinationBrowseButton)) {
-      handleDestinationBrowseButtonPressed();
-    } else {
-      handleInputChanged();
-    }
   }
 
   boolean finish() {
@@ -183,18 +78,10 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
 
   protected void handleInputChanged() {
     var status = WizardStatus.createOkStatus();
-
-    status.merge(processor.setImportFile(ui.destinationNameField.getCombo().getText()));
-    status.merge(processor.setEntityName(ui.entity.getText()));
-    String newProject = ui.sourceProjectField.getCombo().getText();
-    var sameProject = Objects.equals(processor.getSelectedSourceProjectName(), newProject);
-    status.merge(processor.setProject(newProject));
-    if (!sameProject || ui.persistence.getCombo().getItemCount() == 0) {
-      ui.persistence.getCombo().setItems(processor.units().toArray(String[]::new)); // update
-    }
-
-    status.merge(processor.setPersistence(ui.persistence.getCombo().getText()));
-
+    status.merge(processor.validateImportFileExits());
+    status.merge(processor.validateEntity());
+    status.merge(processor.validateProject());
+    status.merge(processor.validatePersistence());
     setPageComplete(status.isLowerThan(WizardStatus.ERROR));
     if (status.isOk()) {
       setMessage(processor.getWizardPageOkMessage(PAGE_ID), 0);
@@ -206,7 +93,7 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
   }
 
   private void saveDialogSettings() {
-    Combo dest = ui.destinationNameField.getCombo();
+    Combo dest = ui.importFile.getCombo();
     List<String> destinations = new LinkedList<String>(Arrays.asList(dest.getItems()));
     String path = dest.getText();
     String lowerCasePath = path.toLowerCase();
@@ -228,7 +115,7 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
     dialog.setFilterExtensions(ExcelImportUtil.IMPORT_TYPE);
     dialog.setText("Select import file");
     dialog.setFilterPath(StringUtils.EMPTY);
-    String currentSourceString = ui.destinationNameField.getCombo().getText();
+    String currentSourceString = ui.importFile.getCombo().getText();
     dialog.setFilterPath(currentSourceString);
     String selectedFileName = dialog.open();
     if (selectedFileName != null) {
@@ -237,8 +124,8 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
   }
 
   private void fileSelected(String selectedFileName) {
-    ui.destinationNameField.getCombo().setText(selectedFileName);
-    ui.entity.setText(proposeName(selectedFileName));
+    state.file.setSelection(selectedFileName);
+    state.entity.setText(proposeName(selectedFileName));
   }
 
   private static String proposeName(String selection) {
@@ -252,7 +139,7 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
   }
 
   private boolean executeImport() {
-    Combo dst = ui.destinationNameField.getCombo();
+    Combo dst = ui.importFile.getCombo();
     if (dst.getText().lastIndexOf(File.separator) == -1) {
       dst.setText(ExcelImportUtil.DEFAULT_FILTER_PATH + File.separator + dst.getText());
       processor.setImportFile(dst.getText());
