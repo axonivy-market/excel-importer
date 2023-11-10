@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -48,8 +49,11 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
   private IIvyProject selectedSourceProject;
   private FileResource importFile;
   private IStatus status = Status.OK_STATUS;
+
   private String selectedPersistence;
   private String entityName;
+  private String projectName;
+  private String file;
 
   public ExcelImportProcessor(IStructuredSelection selection) {
     this.selectedSourceProject = ExcelImportUtil.getFirstNonImmutableIvyProject(selection);
@@ -148,7 +152,12 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     return selectedSourceProject.getName();
   }
 
+  public String getImportFile() {
+    return file;
+  }
+
   public WizardStatus setImportFile(String text) {
+    this.file = text;
     if (text != null) {
       try {
         importFile = NioFileSystemProvider.create(Path.of("/")).root().file(text);
@@ -161,27 +170,42 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     return validateImportFileExits();
   }
 
+  public String getEntityName() {
+    return entityName;
+  }
+
   public WizardStatus setEntityName(String name) {
     this.entityName = name;
+    return validateEntity();
+  }
+
+  private WizardStatus validateEntity() {
     if (entityName.isBlank()) {
       return WizardStatus.createErrorStatus("Need a valid name for the Data to import");
     }
     return WizardStatus.createOkStatus();
   }
 
-  public WizardStatus setSource(String projectName) {
-    selectedSourceProject = null;
-    if (projectName != null) {
+  public String getProjectName() {
+    return this.projectName;
+  }
+
+  public WizardStatus setProject(String projectName) {
+    this.projectName = projectName;
+    if (projectName != null && !Objects.equals(projectName, this.projectName)) {
       selectedSourceProject = IIvyProjectManager.instance().getIvyProject(projectName);
+    } else {
+      selectedSourceProject = null;
     }
     return validateSource();
   }
 
+  public String getPersistence() {
+    return selectedPersistence;
+  }
+
   public WizardStatus setPersistence(String name) {
-    selectedPersistence = null;
-    if (StringUtils.isNotBlank(name)) {
-      selectedPersistence = name;
-    }
+    selectedPersistence = name;
     return validatePersistence();
   }
 
