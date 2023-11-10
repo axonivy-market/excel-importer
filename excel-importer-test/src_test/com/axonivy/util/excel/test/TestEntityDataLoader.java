@@ -74,6 +74,7 @@ public class TestEntityDataLoader {
   @BeforeEach
   void setup() {
     this.unit = Ivy.persistence().get("testing");
+    unit.createEntityManager().clear(); // eager access
     this.loader = new EntityDataLoader(unit);
     this.reader = new EntityClassReader();
   }
