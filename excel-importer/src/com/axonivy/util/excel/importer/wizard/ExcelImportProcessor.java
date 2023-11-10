@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -48,8 +49,11 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
   private IIvyProject selectedSourceProject;
   private FileResource importFile;
   private IStatus status = Status.OK_STATUS;
-  private String selectedPersistence;
-  private String entityName;
+
+  private String selectedPersistence = "";
+  private String entityName = "";
+  private String projectName = "";
+  private String file = "";
 
   public ExcelImportProcessor(IStructuredSelection selection) {
     this.selectedSourceProject = ExcelImportUtil.getFirstNonImmutableIvyProject(selection);
@@ -69,7 +73,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
   public boolean wizardFinishInvoked() {
     var okStatus = WizardStatus.createOkStatus();
     okStatus.merge(validateImportFileExits());
-    okStatus.merge(validateSource());
+    okStatus.merge(validateProject());
     return okStatus.isLowerThan(WizardStatus.ERROR);
   }
 
@@ -148,7 +152,12 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     return selectedSourceProject.getName();
   }
 
+  public String getImportFile() {
+    return file;
+  }
+
   public WizardStatus setImportFile(String text) {
+    this.file = text;
     if (text != null) {
       try {
         importFile = NioFileSystemProvider.create(Path.of("/")).root().file(text);
@@ -161,27 +170,42 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     return validateImportFileExits();
   }
 
+  public String getEntityName() {
+    return entityName;
+  }
+
   public WizardStatus setEntityName(String name) {
     this.entityName = name;
+    return validateEntity();
+  }
+
+  public WizardStatus validateEntity() {
     if (entityName.isBlank()) {
       return WizardStatus.createErrorStatus("Need a valid name for the Data to import");
     }
     return WizardStatus.createOkStatus();
   }
 
-  public WizardStatus setSource(String projectName) {
-    selectedSourceProject = null;
-    if (projectName != null) {
+  public String getProjectName() {
+    return this.projectName;
+  }
+
+  public WizardStatus setProject(String projectName) {
+    if (projectName != null && !Objects.equals(projectName, this.projectName)) {
       selectedSourceProject = IIvyProjectManager.instance().getIvyProject(projectName);
+    } else {
+      selectedSourceProject = null;
     }
-    return validateSource();
+    this.projectName = projectName;
+    return validateProject();
+  }
+
+  public String getPersistence() {
+    return selectedPersistence;
   }
 
   public WizardStatus setPersistence(String name) {
-    selectedPersistence = null;
-    if (StringUtils.isNotBlank(name)) {
-      selectedPersistence = name;
-    }
+    selectedPersistence = name;
     return validatePersistence();
   }
 
@@ -189,21 +213,21 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     return status;
   }
 
-  private WizardStatus validateImportFileExits() {
+  public WizardStatus validateImportFileExits() {
     if (importFile == null || !importFile.exists()) {
-      return WizardStatus.createErrorStatus("Import file does not exist");
+      return WizardStatus.createErrorStatus("Import file "+importFile+" does not exist");
     }
     return WizardStatus.createOkStatus();
   }
 
-  private WizardStatus validateSource() {
+  public WizardStatus validateProject() {
     if (selectedSourceProject == null) {
       return WizardStatus.createErrorStatus("Please specify an Axon Ivy project");
     }
     return WizardStatus.createOkStatus();
   }
 
-  private WizardStatus validatePersistence() {
+  public WizardStatus validatePersistence() {
     if (selectedPersistence == null || !units().contains(selectedPersistence)) {
       return WizardStatus.createErrorStatus("Please specify a Persistence DB to store XLS data");
     }
