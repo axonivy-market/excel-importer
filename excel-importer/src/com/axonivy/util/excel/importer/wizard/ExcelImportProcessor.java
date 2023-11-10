@@ -1,9 +1,9 @@
 package com.axonivy.util.excel.importer.wizard;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -37,6 +37,7 @@ import ch.ivyteam.ivy.process.data.persistence.model.Persistence.PersistenceUnit
 import ch.ivyteam.ivy.project.IIvyProject;
 import ch.ivyteam.ivy.project.IIvyProjectManager;
 import ch.ivyteam.ivy.scripting.dataclass.IDataClassManager;
+import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 import ch.ivyteam.ivy.scripting.dataclass.IProjectDataClassManager;
 import ch.ivyteam.ivy.search.restricted.ProjectRelationSearchScope;
 import ch.ivyteam.util.io.resource.FileResource;
@@ -86,7 +87,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
         var manager = IDataClassManager.instance().getProjectDataModelFor(selectedSourceProject.getProject());
         try {
           importExcel(manager, importFile, m);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
           status = EclipseUtil.createErrorStatus(ex);
         }
       }, null, IWorkspace.AVOID_UPDATE, progress);
@@ -97,7 +98,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     }
   }
 
-  private void importExcel(IProjectDataClassManager manager, FileResource excel, IProgressMonitor monitor) throws IOException {
+  private void importExcel(IProjectDataClassManager manager, FileResource excel, IProgressMonitor monitor) throws Exception {
     Workbook wb = null;
     try(InputStream is = excel.read().inputStream()) {
       wb = ExcelLoader.load(excel.name(), excel.read().inputStream());
@@ -112,14 +113,14 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     monitor.setTaskName("Created EntityClass "+entityName);
 
     IProcessModelVersion pmv = manager.getProcessModelVersion();
-    var persist = pmv.getAdapter(IPersistenceContext.class);
-    var ivyEntities = persist.get(selectedPersistence);
-    EntityDataLoader loader = new EntityDataLoader(ivyEntities);
-    var entityType = loader.createTable(newEntity);
-    loader.load(sheet, newEntity);
-    List<?> loaded = ivyEntities.findAll(entityType);
-    System.out.println("inserted entities "+loaded.size());
-    monitor.setTaskName("Loaded Excel rows into Database "+loaded.size());
+    int loaded = 0;
+    try {
+      var entries = importData(sheet, newEntity, pmv);
+      loaded =  entries.size();
+    } catch (Exception ex) {
+      status = EclipseUtil.createErrorStatus("Loading of Excel data failed", ex);
+    }
+    monitor.setTaskName("Loaded Excel rows into Database "+loaded);
 
     new DialogCreator().createDialog(newEntity, selectedPersistence);
 
@@ -128,6 +129,16 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     SwtRunnable.execNowOrAsync(()->
       EclipseUiUtil.openEditor(process)
     );
+  }
+
+  private List<?> importData(Sheet sheet, IEntityClass newEntity, IProcessModelVersion pmv) throws SQLException {
+    var persist = pmv.getAdapter(IPersistenceContext.class);
+    var ivyEntities = persist.get(selectedPersistence);
+    EntityDataLoader loader = new EntityDataLoader(ivyEntities);
+    var entityType = loader.createTable(newEntity);
+    loader.load(sheet, newEntity);
+    List<?> loaded = ivyEntities.findAll(entityType);
+    return loaded;
   }
 
   String getSelectedSourceProjectName() {

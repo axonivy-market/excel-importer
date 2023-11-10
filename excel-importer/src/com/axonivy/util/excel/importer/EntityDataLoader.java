@@ -1,18 +1,25 @@
 package com.axonivy.util.excel.importer;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Query;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.internal.SessionImpl;
 
 import ch.ivyteam.ivy.java.IJavaConfigurationManager;
 import ch.ivyteam.ivy.process.data.persistence.IIvyEntityManager;
@@ -31,55 +38,71 @@ public class EntityDataLoader {
     this.manager = manager;
   }
 
-  public void load(Sheet sheet, IEntityClass entity) {
+  public void load(Sheet sheet, IEntityClass entity) throws SQLException {
+    load(sheet, entity, new NullProgressMonitor());
+  }
+
+  public void load(Sheet sheet, IEntityClass entity, IProgressMonitor monitor) throws SQLException {
     Iterator<Row> rows = sheet.rowIterator();
     rows.next(); // skip header
-
-    List<? extends IEntityClassField> fields = entity.getFields();
-    var query = buildInsertQuery(entity, fields);
+    monitor.beginTask("Importing Excel data rows", sheet.getLastRowNum());
 
     EntityManager em = manager.createEntityManager();
-    EntityTransaction tx = em.getTransaction();
-    tx.begin();
-    AtomicInteger rCount = new AtomicInteger();
+    JdbcConnectionAccess access = em.unwrap(SessionImpl.class).getJdbcConnectionAccess();
+    Connection con = access.obtainConnection();
     try {
-      rows.forEachRemaining(row -> {
-        Query insert = em.createNativeQuery(query);
-        rCount.incrementAndGet();
-        insertCallValuesAsParameter(fields, row, insert);
-        try {
-          var inserted = insert.executeUpdate();
-          System.out.println("updateded "+inserted+" records");
-        } catch (Exception ex) {
-          LOGGER.error("Failed to insert "+insert);
-        }
-      });
+      var stmt = loadRows(entity, rows, con);
+      stmt.executeBatch();
+      con.commit();
+    } catch (Exception ex) {
+      LOGGER.error("failed to load rows "+ex);
     } finally {
-      System.out.println("inserted " + rCount + " rows");
-      tx.commit();
+      access.releaseConnection(con);
       em.close();
     }
   }
 
-  private void insertCallValuesAsParameter(List<? extends IEntityClassField> fields, Row row, Query insert) {
+  private PreparedStatement loadRows(IEntityClass entity, Iterator<Row> rows, Connection con) throws SQLException {
+    AtomicInteger rCount = new AtomicInteger();
+    List<? extends IEntityClassField> fields = entity.getFields();
+    var query = buildInsertQuery(entity, fields);
+    LOGGER.info("Prepared insert query: "+query);
+    var stmt = con.prepareStatement(query, Statement.NO_GENERATED_KEYS);
+    rows.forEachRemaining(row -> {
+      try {
+      rCount.incrementAndGet();
+        insertCallValuesAsParameter(fields, row, stmt);
+        stmt.addBatch();
+      } catch (SQLException ex) {
+        throw new RuntimeException(ex);
+      }
+    });
+    LOGGER.info("Generated "+rCount+" inserts");
+    return stmt;
+  }
+
+  private static void insertCallValuesAsParameter(List<? extends IEntityClassField> fields, Row row, PreparedStatement stmt) throws SQLException {
     int c = 0;
     for(var field : fields) {
       if (field.getName().equals("id")) {
         continue;
       }
-      String name = field.getName();
       Cell cell = row.getCell(c);
       Object value = getValue(cell);
-      insert.setParameter(name, value);
       c++;
+      stmt.setObject(c, value);
     }
   }
 
-  private String buildInsertQuery(IEntityClass entity, List<? extends IEntityClassField> fields) {
+  private static String buildInsertQuery(IEntityClass entity, List<? extends IEntityClassField> fields) {
     String colNames = fields.stream().map(IEntityClassField::getName)
       .filter(fld -> !fld.equals("id"))
       .collect(Collectors.joining(","));
-    var query = new StringBuilder("INSERT INTO "+entity.getSimpleName()+" ("+colNames+")\nVALUES (");
+    String tableName = entity.getDatabaseTableName();
+    if (StringUtils.isBlank(tableName)) {
+      tableName = entity.getSimpleName();
+    }
+    var query = new StringBuilder("INSERT INTO "+tableName+" ("+colNames+")\nVALUES (");
     var params = fields.stream().map(IEntityClassField::getName)
       .filter(fld -> !fld.equals("id"))
       .map(f -> ":"+f+"").collect(Collectors.joining(", "));
@@ -103,7 +126,7 @@ public class EntityDataLoader {
     return entityClass;
   }
 
-  private Object getValue(Cell cell) {
+  private static Object getValue(Cell cell) {
     if (cell == null) {
       return null;
     }
