@@ -46,36 +46,40 @@ public class EntityDataLoader {
     rows.next(); // skip header
     monitor.beginTask("Importing Excel data rows", sheet.getLastRowNum());
 
-    List<? extends IEntityClassField> fields = entity.getFields();
-    var query = buildInsertQuery(entity, fields);
-
     EntityManager em = manager.createEntityManager();
     JdbcConnectionAccess access = em.unwrap(SessionImpl.class).getJdbcConnectionAccess();
     Connection con = access.obtainConnection();
-    AtomicInteger rCount = new AtomicInteger();
     try {
-      var stmt = con.prepareStatement(query, Statement.NO_GENERATED_KEYS);
-      rows.forEachRemaining(row -> {
-        try {
-        rCount.incrementAndGet();
-          insertCallValuesAsParameter(fields, row, stmt);
-          stmt.addBatch();
-        } catch (SQLException ex) {
-          throw new RuntimeException(ex);
-        }
-      });
+      var stmt = loadRows(entity, rows, con);
       stmt.executeBatch();
       con.commit();
     } catch (Exception ex) {
-      LOGGER.error("warn "+ex);
+      LOGGER.error("failed to load rows "+ex);
     } finally {
-      System.out.println("inserted " + rCount + " rows");
       access.releaseConnection(con);
       em.close();
     }
   }
 
-  private void insertCallValuesAsParameter(List<? extends IEntityClassField> fields, Row row, PreparedStatement stmt) throws SQLException {
+  private PreparedStatement loadRows(IEntityClass entity, Iterator<Row> rows, Connection con) throws SQLException {
+    AtomicInteger rCount = new AtomicInteger();
+    List<? extends IEntityClassField> fields = entity.getFields();
+    var query = buildInsertQuery(entity, fields);
+    var stmt = con.prepareStatement(query, Statement.NO_GENERATED_KEYS);
+    rows.forEachRemaining(row -> {
+      try {
+      rCount.incrementAndGet();
+        insertCallValuesAsParameter(fields, row, stmt);
+        stmt.addBatch();
+      } catch (SQLException ex) {
+        throw new RuntimeException(ex);
+      }
+    });
+    System.out.println("Generated "+rCount+" inserts");
+    return stmt;
+  }
+
+  private static void insertCallValuesAsParameter(List<? extends IEntityClassField> fields, Row row, PreparedStatement stmt) throws SQLException {
     int c = 0;
     for(var field : fields) {
       if (field.getName().equals("id")) {
@@ -88,7 +92,7 @@ public class EntityDataLoader {
     }
   }
 
-  private String buildInsertQuery(IEntityClass entity, List<? extends IEntityClassField> fields) {
+  private static String buildInsertQuery(IEntityClass entity, List<? extends IEntityClassField> fields) {
     String colNames = fields.stream().map(IEntityClassField::getName)
       .filter(fld -> !fld.equals("id"))
       .collect(Collectors.joining(","));
@@ -116,7 +120,7 @@ public class EntityDataLoader {
     return entityClass;
   }
 
-  private Object getValue(Cell cell) {
+  private static Object getValue(Cell cell) {
     if (cell == null) {
       return null;
     }
