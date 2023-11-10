@@ -14,7 +14,10 @@ Imports Excel sheets and transforms it into a full featured web application.
 ![generated-entity](doc/generate-entity-from-excel.png)
 
 4. A simple process will be created, leading to a Dialog to explore your imported Entities.
-![final-dialog](doc/entity-dialog.png)
+![final-dialog](doc/entity-table.png)
+
+5. Furthermore, the Dialog allows you to modify, delete and add new entries.
+![final-dialog](doc/entity-detail-view.png)
 
 ## Setup
 
