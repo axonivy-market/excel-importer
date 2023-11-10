@@ -2,8 +2,6 @@ package com.axonivy.util.excel.importer.wizard;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -48,7 +46,6 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage {
     if (!history.isEmpty()) {
       fileSelected(history.get(0));
     }
-    history.stream().forEach(ui.importFile::add);
 
    state.bind(ui);
    state.watch(newVal -> handleInputChanged());
@@ -93,9 +90,8 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage {
   }
 
   private void saveDialogSettings() {
-    Combo dest = ui.importFile.getCombo();
-    List<String> destinations = new LinkedList<String>(Arrays.asList(dest.getItems()));
-    String path = dest.getText();
+    List<String> destinations = getImportHistory();
+    String path = state.file.getSelection();
     String lowerCasePath = path.toLowerCase();
     if (destinations.contains(path)) {
       destinations.remove(path);
@@ -115,7 +111,7 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage {
     dialog.setFilterExtensions(ExcelImportUtil.IMPORT_TYPE);
     dialog.setText("Select import file");
     dialog.setFilterPath(StringUtils.EMPTY);
-    String currentSourceString = ui.importFile.getCombo().getText();
+    String currentSourceString = state.file.getSelection();
     dialog.setFilterPath(currentSourceString);
     String selectedFileName = dialog.open();
     if (selectedFileName != null) {
