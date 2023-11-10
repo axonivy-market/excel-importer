@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.viewers.ComboViewer;
@@ -117,15 +118,18 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
     setButtonLayoutData(ui.destinationBrowseButton);
     setControl(ui);
 
-    String[] destinations = getDialogSettings().getArray(ExcelImportUtil.DESTINATION_KEY);
-    if (destinations != null) {
-      fileSelected(destinations[0]);
-      for (String destination : destinations) {
-        if (destination.endsWith(ExcelImportUtil.DEFAULT_EXTENSION)) {
-          ui.destinationNameField.add(destination);
-        }
-      }
+    var history = getImportHistory();
+    if (!history.isEmpty()) {
+      fileSelected(history.get(0));
     }
+    history.stream().forEach(ui.destinationNameField::add);
+  }
+
+  private List<String> getImportHistory() {
+    String[] destinations = getDialogSettings().getArray(ExcelImportUtil.DESTINATION_KEY);
+    return Stream.of(destinations)
+      .filter(file -> file.endsWith(ExcelImportUtil.DEFAULT_EXTENSION))
+      .toList();
   }
 
   @Override
