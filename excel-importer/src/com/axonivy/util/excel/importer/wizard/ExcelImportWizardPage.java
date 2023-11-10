@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +28,9 @@ import org.eclipse.swt.widgets.Widget;
 
 import ch.ivyteam.ivy.designer.ui.wizard.restricted.WizardStatus;
 import ch.ivyteam.swt.dialogs.SwtCommonDialogs;
+import ch.ivyteam.ui.model.UiComboModel;
+import ch.ivyteam.ui.model.UiTextModel;
+import ch.ivyteam.ui.model.swt.SwtBinder;
 
 public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Listener {
 
@@ -92,6 +96,30 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
     }
   }
 
+  public static class UiState {
+
+    private UiComboModel<String> file;
+    private UiComboModel<String> project;
+    private UiTextModel entity;
+    private UiComboModel<String> persistence;
+
+    public UiState(ExcelImportProcessor processor, Supplier<List<String>> history) {
+      this.file = new UiComboModel<>(processor::getImportFile, processor::setImportFile, history.get());
+      this.project = new UiComboModel<>(processor::getProjectName, processor::setProject, ExcelImportUtil.getIvyProjectNames());
+      this.entity = new UiTextModel(processor::getEntityName, processor::setEntityName);
+      this.persistence = new UiComboModel<>(processor::getPersistence, processor::setPersistence, processor.units());
+    }
+
+    public void bind(ExcelUi ui) {
+      var binder = new SwtBinder();
+      binder.bind(file).to(ui.destinationNameField);
+      binder.bind(entity).to(ui.entity);
+      binder.bind(project).to(ui.sourceProjectField);
+      binder.bind(persistence).to(ui.persistence);
+    }
+
+  }
+
   @Override
   public void createControl(Composite parent) {
     this.ui = new ExcelUi(parent);
@@ -127,6 +155,9 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage, Li
 
   private List<String> getImportHistory() {
     String[] destinations = getDialogSettings().getArray(ExcelImportUtil.DESTINATION_KEY);
+    if (destinations == null) {
+      return List.of();
+    }
     return Stream.of(destinations)
       .filter(file -> file.endsWith(ExcelImportUtil.DEFAULT_EXTENSION))
       .toList();
