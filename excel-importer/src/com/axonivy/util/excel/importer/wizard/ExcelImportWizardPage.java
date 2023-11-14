@@ -2,6 +2,7 @@ package com.axonivy.util.excel.importer.wizard;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -90,7 +91,7 @@ public class ExcelImportWizardPage extends WizardPage implements IWizardPage {
   }
 
   private void saveDialogSettings() {
-    List<String> destinations = getImportHistory();
+    List<String> destinations = new LinkedList<>(getImportHistory());
     String path = state.file.getSelection();
     String lowerCasePath = path.toLowerCase();
     if (destinations.contains(path)) {
