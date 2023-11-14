@@ -41,10 +41,13 @@ import ch.ivyteam.ivy.scripting.dataclass.IDataClassManager;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 import ch.ivyteam.ivy.scripting.dataclass.IProjectDataClassManager;
 import ch.ivyteam.ivy.search.restricted.ProjectRelationSearchScope;
+import ch.ivyteam.log.Logger;
 import ch.ivyteam.util.io.resource.FileResource;
 import ch.ivyteam.util.io.resource.nio.NioFileSystemProvider;
 
 public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgress {
+
+  private static final Logger LOGGER = Logger.getLogger(ExcelImportProcessor.class);
 
   private IIvyProject selectedSourceProject;
   private FileResource importFile;
@@ -122,6 +125,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
       var entries = importData(sheet, newEntity, pmv);
       loaded =  entries.size();
     } catch (Exception ex) {
+      LOGGER.error("Excel data import failed", ex);
       status = EclipseUtil.createErrorStatus("Loading of Excel data failed", ex);
     }
     monitor.setTaskName("Loaded Excel rows into Database "+loaded);
