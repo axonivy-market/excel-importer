@@ -12,52 +12,24 @@ To start with, we need an Eclipse IDE for development.
 2. Unpack the ZIP to a location of your choice
 3. Run the Eclipse binary in it; and pick a yet empty workspace for development
 
-### Target Platform
-
-Here's how you can setup your eclipseRCP to build upon the AxonIvyDesigner platform.
-
-1. Navigate to "Window" > "Preferences" > "Plug-in Development" > "Target Platform"  ![platform-add.png](platform-add.png)
-
-2. Click on the "Add" button to setup the Designer platform
-
-3. In the wizard, choose "Nothing: start with an empty definition" and click"Next"
-
-4. Click "Add" to create a new Target
-
-5. Choose "Software Site" and click "Next"
-   ![platform-site.png](platform-site.png)
-
-6. On top in the "Work with section" click on "Add..."
-   
-   1. name = lts10
-   2. location = https://p2.axonivy.com/p2/10.0/
-   3. hit the 'add' Button to close the modal dialog
-      ![platform-add-sitelts10.png](platform-add-sitelts10.png)
-
-7. Check all features and categories to be imported and proceed
-   ![platform-select-features.png](platform-select-features.png)
-
-8. The platform is being download; be patient :)
-
-9. Finally; give the 'target' a name: e.g. "ivy-lts10" and press Finish
-   
-   ![target-naming.png](target-naming.png)
-
-10. Back in the preferences check the newly added target "ivy-lts10" and click "apply and close"
-
-![platform-enable.png](platform-enable.png)
-
 ### Workspace
 
 Now you are ready to import the "excel-importer" extension
 
 1. Click on the Menu "File" -> "Import" -> "General" > Existing projects into workspace"
-2. Select the "excel-importer" project within your local clone of this repo.
-3. The extension should compile successfully.
+2. Select the "excel-importer-modules" and "excel-importer" project within your local clone of this repo.
+3. The extension will not yet compile; until we have a valid target-platform
 
-![import-extension.png](import-extension.png)
+### Target Platform
 
-![import-cancel-solution.png](import-cancel-solution.png)
+Here's how you can setup your eclipseRCP to build upon the AxonIvyDesigner platform.
+
+1. Navigate to "Window" > "Preferences" > "Plug-in Development" > "Target Platform"  Select the 'ivy.target' file from your local workspace. 
+2. Press "Apply and Close" ... wait for the platform fetching (south east progress bar of eclipse main windows) 
+3. Compile the 'excel-connector' extension. You may have to do this manually after loading the platform: Menu "Project" > "Clean" 
+4. Now all projects in the workspace should be without errors.
+
+![platform-target-lts.png](platform-target-lts.png)
 
 ### Launch Config
 
@@ -84,8 +56,6 @@ In the Dev-Designer you can access the extension.
 2. Run the extension via Menu "File" -> "Import". If you run it, you will execute the code in your Eclipse RCP environment.
 
 ![run-extension-inDevDesigner.png](run-extension-inDevDesigner.png)
-
- 
 
 ### Debugging
 
