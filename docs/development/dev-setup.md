@@ -1,4 +1,4 @@
-# Dev Enviroment Setup
+# Dev Environment Setup
 
 The excel-importer is an Eclipse RCP extension, contributing to the Axon Ivy Designer featureset. This guide explains the steps to setup the development environment for it.
 
