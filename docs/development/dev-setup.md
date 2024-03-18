@@ -40,7 +40,28 @@ Now we are building a launcher to start the Designer from the Dev environment.
 3. Give the Configuration a name e.g. "DevDesigner"
 4. In the Main tab, select the product to run to be "ch.ivyteam.ivy.designer.branding.product" 
 5. In the Arguments tab, in the Working Directory section, choose "Other" and pass a file path to an official AxonIvyDesigner, matching your development train.
-6. Hit the "Run" button ... and the Designer should start
+6. In the "VM arguments" section: add the following:  
+   
+   ```
+   -Dorg.eclipse.swt.graphics.Resource.reportNonDisposed=true
+   -Xmx2g
+   --add-modules=ALL-SYSTEM
+   --add-exports=java.desktop/com.sun.java.swing.plaf.windows=ALL-UNNAMED
+   --add-opens=java.base/java.io=ALL-UNNAMED
+   --add-opens=java.base/java.lang=ALL-UNNAMED
+   --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+   --add-opens=java.base/java.time=ALL-UNNAMED
+   --add-opens=java.base/java.text=ALL-UNNAMED
+   --add-opens=java.base/java.util=ALL-UNNAMED
+   --add-opens=java.base/java.net=ALL-UNNAMED
+   --add-opens=java.desktop/java.awt.font=ALL-UNNAMED
+   --add-exports=java.xml/com.sun.org.apache.xpath.internal=ALL-UNNAMED
+   --add-exports=java.xml/com.sun.org.apache.xpath.internal.objects=ALL-UNNAMED
+   --add-exports=java.xml/com.sun.org.apache.xml.internal.utils=ALL-UNNAMED
+   --add-exports=java.base/sun.security.provider.certpath=ALL-UNNAMED
+   -Dosgi.requiredJavaVersion=17 
+   ```
+7. Hit the "Run" button ... and the Designer should start
 
 ![launch-create.png](launch-create.png)
 
