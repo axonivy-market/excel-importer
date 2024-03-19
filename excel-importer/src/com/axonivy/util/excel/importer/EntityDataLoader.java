@@ -28,7 +28,6 @@ import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClassField;
 import ch.ivyteam.log.Logger;
 
-@SuppressWarnings("restriction")
 public class EntityDataLoader {
 
   private static final Logger LOGGER = Logger.getLogger(EntityDataLoader.class);
@@ -50,6 +49,7 @@ public class EntityDataLoader {
     EntityManager em = manager.createEntityManager();
     JdbcConnectionAccess access = em.unwrap(SessionImpl.class).getJdbcConnectionAccess();
     Connection con = access.obtainConnection();
+    con.setAutoCommit(false);
     try {
       var stmt = loadRows(entity, rows, con);
       stmt.executeBatch();
