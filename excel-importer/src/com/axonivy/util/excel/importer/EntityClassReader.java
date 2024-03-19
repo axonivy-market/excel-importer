@@ -17,7 +17,6 @@ public class EntityClassReader {
 
   public final IProjectDataClassManager manager;
 
-  @SuppressWarnings("restriction")
   public EntityClassReader() {
     this(IDataClassManager.instance().getProjectDataModelFor(Ivy.wfCase().getProcessModelVersion()));
   }

@@ -28,7 +28,6 @@ import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClassField;
 import ch.ivyteam.log.Logger;
 
-@SuppressWarnings("restriction")
 public class EntityDataLoader {
 
   private static final Logger LOGGER = Logger.getLogger(EntityDataLoader.class);
@@ -50,12 +49,11 @@ public class EntityDataLoader {
     EntityManager em = manager.createEntityManager();
     JdbcConnectionAccess access = em.unwrap(SessionImpl.class).getJdbcConnectionAccess();
     Connection con = access.obtainConnection();
+    con.setAutoCommit(false);
     try {
       var stmt = loadRows(entity, rows, con);
       stmt.executeBatch();
       con.commit();
-    } catch (Exception ex) {
-      LOGGER.error("failed to load rows "+ex);
     } finally {
       access.releaseConnection(con);
       em.close();
@@ -105,7 +103,7 @@ public class EntityDataLoader {
     var query = new StringBuilder("INSERT INTO "+tableName+" ("+colNames+")\nVALUES (");
     var params = fields.stream().map(IEntityClassField::getName)
       .filter(fld -> !fld.equals("id"))
-      .map(f -> ":"+f+"").collect(Collectors.joining(", "));
+      .map(f -> "?").collect(Collectors.joining(", "));
     query.append(params);
     query.append(")");
     return query.toString();
