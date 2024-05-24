@@ -3,7 +3,6 @@ package com.axonivy.util.excel.importer.wizard;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,6 +36,8 @@ import ch.ivyteam.ivy.process.data.persistence.datamodel.IProcessDataPersistence
 import ch.ivyteam.ivy.process.data.persistence.model.Persistence.PersistenceUnit;
 import ch.ivyteam.ivy.project.IIvyProject;
 import ch.ivyteam.ivy.project.IIvyProjectManager;
+import ch.ivyteam.ivy.request.RequestFactory;
+import ch.ivyteam.ivy.request.impl.RequestContext;
 import ch.ivyteam.ivy.scripting.dataclass.IDataClassManager;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 import ch.ivyteam.ivy.scripting.dataclass.IProjectDataClassManager;
@@ -139,13 +140,18 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     );
   }
 
-  private List<?> importData(Sheet sheet, IEntityClass newEntity, IProcessModelVersion pmv) throws SQLException {
+  private List<?> importData(Sheet sheet, IEntityClass newEntity, IProcessModelVersion pmv) throws Exception {
     var persist = pmv.getAdapter(IPersistenceContext.class);
     var ivyEntities = persist.get(selectedPersistence);
     EntityDataLoader loader = new EntityDataLoader(ivyEntities);
-    var entityType = loader.createTable(newEntity);
-    loader.load(sheet, newEntity);
-    List<?> loaded = ivyEntities.findAll(entityType);
+
+    var system = pmv.getApplication().getSecurityContext().sessions().systemUser();
+    var request =  RequestFactory.createRestRequest(pmv, system);
+    List<?> loaded = new RequestContext(request).callInContext(() -> {
+      var entityType = loader.createTable(newEntity);
+      loader.load(sheet, newEntity);
+      return ivyEntities.findAll(entityType);
+    });
     return loaded;
   }
 
