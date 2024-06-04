@@ -1,10 +1,12 @@
 package com.axonivy.util.excel.importer;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
@@ -49,6 +51,12 @@ public class ExcelReader {
     }
     switch (cell.getCellType()) {
       case NUMERIC:
+        if (DateUtil.isCellDateFormatted(cell)) {
+          return new Column(name, Date.class);
+        }
+        if (Utils.isCellInteger(cell)) {
+          return new Column(name, Integer.class);
+        }
         return new Column(name, Double.class);
       case STRING:
         return new Column(name, String.class);

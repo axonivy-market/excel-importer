@@ -1,5 +1,8 @@
 package com.axonivy.util.excel.importer;
 
+import static java.lang.Integer.valueOf;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -14,6 +17,7 @@ import javax.persistence.EntityManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -31,17 +35,18 @@ import ch.ivyteam.log.Logger;
 public class EntityDataLoader {
 
   private static final Logger LOGGER = Logger.getLogger(EntityDataLoader.class);
+  private static final int DEFAULT_FIELD_LENGTH = 255;
   private final IIvyEntityManager manager;
 
   public EntityDataLoader(IIvyEntityManager manager) {
     this.manager = manager;
   }
 
-  public void load(Sheet sheet, IEntityClass entity) throws SQLException {
-    load(sheet, entity, new NullProgressMonitor());
+  public int load(Sheet sheet, IEntityClass entity) throws SQLException {
+    return load(sheet, entity, new NullProgressMonitor());
   }
 
-  public void load(Sheet sheet, IEntityClass entity, IProgressMonitor monitor) throws SQLException {
+  public int load(Sheet sheet, IEntityClass entity, IProgressMonitor monitor) throws SQLException {
     Iterator<Row> rows = sheet.rowIterator();
     rows.next(); // skip header
     monitor.beginTask("Importing Excel data rows", sheet.getLastRowNum());
@@ -49,19 +54,23 @@ public class EntityDataLoader {
     EntityManager em = manager.createEntityManager();
     JdbcConnectionAccess access = em.unwrap(SessionImpl.class).getJdbcConnectionAccess();
     Connection con = access.obtainConnection();
+    AtomicInteger rCount = new AtomicInteger();
     con.setAutoCommit(false);
     try {
-      var stmt = loadRows(entity, rows, con);
+      var stmt = loadRows(entity, rows, con, rCount);
+      entity.save();
+      createTable(entity);
       stmt.executeBatch();
       con.commit();
+      return rCount.intValue();
     } finally {
       access.releaseConnection(con);
       em.close();
     }
   }
 
-  private PreparedStatement loadRows(IEntityClass entity, Iterator<Row> rows, Connection con) throws SQLException {
-    AtomicInteger rCount = new AtomicInteger();
+  private PreparedStatement loadRows(IEntityClass entity, Iterator<Row> rows, Connection con, AtomicInteger rCount)
+      throws SQLException {
     List<? extends IEntityClassField> fields = entity.getFields();
     var query = buildInsertQuery(entity, fields);
     LOGGER.info("Prepared insert query: "+query);
@@ -86,6 +95,7 @@ public class EntityDataLoader {
         continue;
       }
       Cell cell = row.getCell(c);
+      updateField(field, cell);
       Object value = getValue(cell);
       c++;
       stmt.setObject(c, value);
@@ -129,9 +139,30 @@ public class EntityDataLoader {
       return null;
     }
     if (cell.getCellType() == CellType.NUMERIC)  {
+      if (DateUtil.isCellDateFormatted(cell)) {
+        return cell.getDateCellValue();
+      }
       return cell.getNumericCellValue();
     }
     return cell.getStringCellValue();
   }
 
+  private static void updateField(IEntityClassField field, Cell cell) {
+    if (cell == null) {
+      return;
+    }
+    if (cell.getCellType() == CellType.NUMERIC 
+        && field.getType().equals(Integer.class.getName())
+        && !Utils.isCellInteger(cell)) {
+      field.setType(Double.class.getSimpleName());
+    }
+
+    if (field.getType().equals(String.class.getName())) {
+      var cellLength = cell.getStringCellValue().length();
+      var fieldLength = isBlank(field.getDatabaseFieldLength()) ? DEFAULT_FIELD_LENGTH : valueOf(field.getDatabaseFieldLength());
+      if (cellLength > DEFAULT_FIELD_LENGTH && cellLength > fieldLength) {
+        field.setDatabaseFieldLength(String.valueOf(cellLength));
+      }
+    }
+  }
 }

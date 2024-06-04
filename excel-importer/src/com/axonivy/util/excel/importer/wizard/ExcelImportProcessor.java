@@ -114,21 +114,16 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     Sheet sheet = wb.getSheetAt(0);
 
     var newEntity = new EntityClassReader(manager).toEntity(sheet, entityName);
-    newEntity.save();
-    SwtRunnable.execNowOrAsync(()->
-      EclipseUiUtil.openEditor(newEntity)
-    );
-    monitor.setTaskName("Created EntityClass "+entityName);
-
     IProcessModelVersion pmv = manager.getProcessModelVersion();
     int loaded = 0;
     try {
-      var entries = importData(sheet, newEntity, pmv);
-      loaded =  entries.size();
+      loaded = importData(sheet, newEntity, pmv);
     } catch (Exception ex) {
       LOGGER.error("Excel data import failed", ex);
       status = EclipseUtil.createErrorStatus("Loading of Excel data failed", ex);
     }
+
+    SwtRunnable.execNowOrAsync(() -> EclipseUiUtil.openEditor(newEntity));
     monitor.setTaskName("Loaded Excel rows into Database "+loaded);
 
     new DialogCreator().createDialog(newEntity, selectedPersistence);
@@ -140,19 +135,14 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     );
   }
 
-  private List<?> importData(Sheet sheet, IEntityClass newEntity, IProcessModelVersion pmv) throws Exception {
+  private Integer importData(Sheet sheet, IEntityClass newEntity, IProcessModelVersion pmv) throws Exception {
     var persist = pmv.getAdapter(IPersistenceContext.class);
     var ivyEntities = persist.get(selectedPersistence);
     EntityDataLoader loader = new EntityDataLoader(ivyEntities);
 
     var system = pmv.getApplication().getSecurityContext().sessions().systemUser();
     var request =  RequestFactory.createRestRequest(pmv, system);
-    List<?> loaded = new RequestContext(request).callInContext(() -> {
-      var entityType = loader.createTable(newEntity);
-      loader.load(sheet, newEntity);
-      return ivyEntities.findAll(entityType);
-    });
-    return loaded;
+    return new RequestContext(request).callInContext(() -> loader.load(sheet, newEntity));
   }
 
   String getSelectedSourceProjectName() {
