@@ -4,16 +4,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import com.axonivy.util.excel.importer.Column;
 import com.axonivy.util.excel.importer.ExcelLoader;
 import com.axonivy.util.excel.importer.ExcelReader;
-import com.axonivy.util.excel.importer.ExcelReader.Column;
 
+import ch.ivyteam.ivy.environment.IvyTest;
+
+@IvyTest
 class TestExcelReader {
 
   @Test
@@ -22,12 +26,11 @@ class TestExcelReader {
     TstRes.loadTo(path, "sample.xlsx");
     Workbook wb = ExcelLoader.load(path);
     List<Column> columns = ExcelReader.parseColumns(wb.getSheetAt(0));
-    assertThat(columns).extracting(Column::name)
-      .contains("Firstname", "Lastname");
+    assertThat(columns).extracting(Column::getName)
+        .contains("firstname", "lastname");
     assertThat(columns).contains(
-      new Column("Firstname", String.class),
-      new Column("ZIP", Double.class),
-      new Column("Birthdate", Double.class) // should be a date
+        new Column("firstname", String.class, 255), new Column("zip", Integer.class, 11),
+        new Column("amount", Double.class, 15), new Column("birthdate", Date.class, null) // should be a date
     );
   }
 

@@ -39,7 +39,6 @@ import ch.ivyteam.ivy.project.IIvyProjectManager;
 import ch.ivyteam.ivy.request.RequestFactory;
 import ch.ivyteam.ivy.request.impl.RequestContext;
 import ch.ivyteam.ivy.scripting.dataclass.IDataClassManager;
-import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 import ch.ivyteam.ivy.scripting.dataclass.IProjectDataClassManager;
 import ch.ivyteam.ivy.search.restricted.ProjectRelationSearchScope;
 import ch.ivyteam.log.Logger;
@@ -106,43 +105,36 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     }
   }
 
-  private void importExcel(IProjectDataClassManager manager, FileResource excel, IProgressMonitor monitor) throws Exception {
+  private void importExcel(IProjectDataClassManager manager, FileResource excel, IProgressMonitor monitor)
+      throws Exception {
     Workbook wb = null;
-    try(InputStream is = excel.read().inputStream()) {
+    try (InputStream is = excel.read().inputStream()) {
       wb = ExcelLoader.load(excel.name(), excel.read().inputStream());
     }
     Sheet sheet = wb.getSheetAt(0);
-
-    var newEntity = new EntityClassReader(manager).toEntity(sheet, entityName);
     IProcessModelVersion pmv = manager.getProcessModelVersion();
-    int loaded = 0;
-    try {
-      loaded = importData(sheet, newEntity, pmv);
+    var ivyEntities = pmv.getAdapter(IPersistenceContext.class).get(selectedPersistence);
+    try (var loader = new EntityDataLoader(ivyEntities)) {
+      var system = pmv.getApplication().getSecurityContext().sessions().systemUser();
+      var entityClass = new RequestContext(RequestFactory.createRestRequest(pmv, system)).callInContext(() -> {
+        loader.load(entityName, sheet);
+        var createdEntity = new EntityClassReader(manager, ivyEntities).createEntity(entityName, loader.getColumns());
+        loader.save();
+        return createdEntity;
+      });
+
+      SwtRunnable.execNowOrAsync(() -> EclipseUiUtil.openEditor(entityClass));
+      monitor.setTaskName("Loaded Excel rows into Database " + loader.getRowCount().intValue());
+
+      new DialogCreator().createDialog(entityClass, selectedPersistence);
+
+      ProcessDrawer drawer = new ProcessDrawer(manager.getProject());
+      var process = drawer.drawManager(entityClass);
+      SwtRunnable.execNowOrAsync(() -> EclipseUiUtil.openEditor(process));
     } catch (Exception ex) {
       LOGGER.error("Excel data import failed", ex);
       status = EclipseUtil.createErrorStatus("Loading of Excel data failed", ex);
     }
-
-    SwtRunnable.execNowOrAsync(() -> EclipseUiUtil.openEditor(newEntity));
-    monitor.setTaskName("Loaded Excel rows into Database "+loaded);
-
-    new DialogCreator().createDialog(newEntity, selectedPersistence);
-
-    ProcessDrawer drawer = new ProcessDrawer(manager.getProject());
-    var process = drawer.drawManager(newEntity);
-    SwtRunnable.execNowOrAsync(()->
-      EclipseUiUtil.openEditor(process)
-    );
-  }
-
-  private Integer importData(Sheet sheet, IEntityClass newEntity, IProcessModelVersion pmv) throws Exception {
-    var persist = pmv.getAdapter(IPersistenceContext.class);
-    var ivyEntities = persist.get(selectedPersistence);
-    EntityDataLoader loader = new EntityDataLoader(ivyEntities);
-
-    var system = pmv.getApplication().getSecurityContext().sessions().systemUser();
-    var request =  RequestFactory.createRestRequest(pmv, system);
-    return new RequestContext(request).callInContext(() -> loader.load(sheet, newEntity));
   }
 
   String getSelectedSourceProjectName() {

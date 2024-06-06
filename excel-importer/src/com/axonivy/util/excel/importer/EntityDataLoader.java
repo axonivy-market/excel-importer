@@ -1,20 +1,17 @@
 package com.axonivy.util.excel.importer;
 
-import static java.lang.Integer.valueOf;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
@@ -22,147 +19,134 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.internal.SessionImpl;
 
-import ch.ivyteam.ivy.java.IJavaConfigurationManager;
 import ch.ivyteam.ivy.process.data.persistence.IIvyEntityManager;
-import ch.ivyteam.ivy.project.IIvyProjectManager;
-import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
-import ch.ivyteam.ivy.scripting.dataclass.IEntityClassField;
 import ch.ivyteam.log.Logger;
 
-public class EntityDataLoader {
+public class EntityDataLoader implements AutoCloseable {
 
   private static final Logger LOGGER = Logger.getLogger(EntityDataLoader.class);
-  private static final int DEFAULT_FIELD_LENGTH = 255;
-  private final IIvyEntityManager manager;
+  private static final String DELIMITER = ", ";
+  private String tableName;
+  private List<Column> columns;
+  private PreparedStatement statement;
+  private EntityManager entityManager;
+  private Connection connection;
+  private AtomicInteger rowCount = new AtomicInteger();
 
-  public EntityDataLoader(IIvyEntityManager manager) {
-    this.manager = manager;
+  public EntityDataLoader(IIvyEntityManager entityManager) throws SQLException {
+    this.entityManager = entityManager.createEntityManager();
+    this.connection = this.entityManager.unwrap(SessionImpl.class).getJdbcConnectionAccess().obtainConnection();
   }
 
-  public int load(Sheet sheet, IEntityClass entity) throws SQLException {
-    return load(sheet, entity, new NullProgressMonitor());
+  public void load(String tableName, Sheet sheet) throws SQLException {
+    this.tableName = tableName;
+    this.columns = ExcelReader.parseColumns(sheet);
+    load(sheet, new NullProgressMonitor());
   }
 
-  public int load(Sheet sheet, IEntityClass entity, IProgressMonitor monitor) throws SQLException {
+  public void load(Sheet sheet, IProgressMonitor monitor) throws SQLException {
+    monitor.beginTask("Importing Excel data rows", sheet.getLastRowNum());
     Iterator<Row> rows = sheet.rowIterator();
     rows.next(); // skip header
-    monitor.beginTask("Importing Excel data rows", sheet.getLastRowNum());
-
-    EntityManager em = manager.createEntityManager();
-    JdbcConnectionAccess access = em.unwrap(SessionImpl.class).getJdbcConnectionAccess();
-    Connection con = access.obtainConnection();
-    AtomicInteger rCount = new AtomicInteger();
-    con.setAutoCommit(false);
-    try {
-      var stmt = loadRows(entity, rows, con, rCount);
-      entity.save();
-      createTable(entity);
-      stmt.executeBatch();
-      con.commit();
-      return rCount.intValue();
-    } finally {
-      access.releaseConnection(con);
-      em.close();
-    }
+    loadRows(rows);
   }
 
-  private PreparedStatement loadRows(IEntityClass entity, Iterator<Row> rows, Connection con, AtomicInteger rCount)
-      throws SQLException {
-    List<? extends IEntityClassField> fields = entity.getFields();
-    var query = buildInsertQuery(entity, fields);
-    LOGGER.info("Prepared insert query: "+query);
-    var stmt = con.prepareStatement(query, Statement.NO_GENERATED_KEYS);
+  public void save() throws SQLException {
+    Objects.requireNonNull(statement);
+    connection.setAutoCommit(false);
+    statement.executeBatch();
+    connection.commit();
+  }
+
+  private void loadRows(Iterator<Row> rows) throws SQLException {
+    Objects.requireNonNull(tableName);
+    Objects.requireNonNull(columns);
+
+    var query = buildInsertQuery();
+    LOGGER.info("Prepared insert query: " + query);
+    statement = connection.prepareStatement(query, Statement.NO_GENERATED_KEYS);
     rows.forEachRemaining(row -> {
       try {
-      rCount.incrementAndGet();
-        insertCallValuesAsParameter(fields, row, stmt);
-        stmt.addBatch();
+        rowCount.incrementAndGet();
+        insertCallValuesAsParameter(row);
+        statement.addBatch();
       } catch (SQLException ex) {
         throw new RuntimeException(ex);
       }
     });
-    LOGGER.info("Generated "+rCount+" inserts");
-    return stmt;
+    LOGGER.info("Generated " + rowCount + " inserts");
   }
 
-  private static void insertCallValuesAsParameter(List<? extends IEntityClassField> fields, Row row, PreparedStatement stmt) throws SQLException {
+  private void insertCallValuesAsParameter(Row row) throws SQLException {
     int c = 0;
-    for(var field : fields) {
-      if (field.getName().equals("id")) {
-        continue;
-      }
+    for (var column : columns) {
       Cell cell = row.getCell(c);
-      updateField(field, cell);
+      updateColumn(column, cell);
       Object value = getValue(cell);
       c++;
-      stmt.setObject(c, value);
+      statement.setObject(c, value);
     }
   }
 
-  private static String buildInsertQuery(IEntityClass entity, List<? extends IEntityClassField> fields) {
-    String colNames = fields.stream().map(IEntityClassField::getName)
-      .filter(fld -> !fld.equals("id"))
-      .collect(Collectors.joining(","));
-    String tableName = entity.getDatabaseTableName();
-    if (StringUtils.isBlank(tableName)) {
-      tableName = entity.getSimpleName();
-    }
-    var query = new StringBuilder("INSERT INTO "+tableName+" ("+colNames+")\nVALUES (");
-    var params = fields.stream().map(IEntityClassField::getName)
-      .filter(fld -> !fld.equals("id"))
-      .map(f -> "?").collect(Collectors.joining(", "));
-    query.append(params);
-    query.append(")");
-    return query.toString();
+  private String buildInsertQuery() {
+    String colNames = columns.stream().map(Column::getName).collect(Collectors.joining(DELIMITER));
+    String placeholders = columns.stream().map(i -> "?").collect(Collectors.joining(DELIMITER));
+    return String.format("INSERT INTO %s (%s)\nVALUES (%s)", tableName, colNames, placeholders);
   }
 
-  public Class<?> createTable(IEntityClass entity) {
-    entity.buildJavaSource(List.of(), null);
-    var java = IJavaConfigurationManager.instance().getJavaConfiguration(entity.getResource().getProject());
-    var ivy = IIvyProjectManager.instance().getIvyProject(entity.getResource().getProject());
-    Class<?> entityClass;
-    try {
-      ivy.build(null);
-      entityClass = java.getClassLoader().loadClass(entity.getName());
-    } catch (Exception ex) {
-      throw new RuntimeException("Failed to load entity class "+entity, ex);
-    }
-    manager.findAll(entityClass); // creates the schema through 'hibernate.hbm2ddl.auto=create'
-    return entityClass;
-  }
-
-  private static Object getValue(Cell cell) {
+  private Object getValue(Cell cell) {
     if (cell == null) {
       return null;
     }
-    if (cell.getCellType() == CellType.NUMERIC)  {
+    if (cell.getCellType() == CellType.NUMERIC) {
       if (DateUtil.isCellDateFormatted(cell)) {
         return cell.getDateCellValue();
       }
       return cell.getNumericCellValue();
+    } else if (cell.getCellType() == CellType.BOOLEAN) {
+      return cell.getBooleanCellValue();
     }
     return cell.getStringCellValue();
   }
 
-  private static void updateField(IEntityClassField field, Cell cell) {
+  private void updateColumn(Column column, Cell cell) {
     if (cell == null) {
       return;
     }
-    if (cell.getCellType() == CellType.NUMERIC 
-        && field.getType().equals(Integer.class.getName())
+    if (cell.getCellType() == CellType.NUMERIC && column.getType().equals(Integer.class)
         && !Utils.isCellInteger(cell)) {
-      field.setType(Double.class.getSimpleName());
+      column.setType(Double.class);
     }
-
-    if (field.getType().equals(String.class.getName())) {
+    if (column.getType().equals(String.class)) {
       var cellLength = cell.getStringCellValue().length();
-      var fieldLength = isBlank(field.getDatabaseFieldLength()) ? DEFAULT_FIELD_LENGTH : valueOf(field.getDatabaseFieldLength());
-      if (cellLength > DEFAULT_FIELD_LENGTH && cellLength > fieldLength) {
-        field.setDatabaseFieldLength(String.valueOf(cellLength));
+      if (cellLength > column.getDatabaseFieldLength()) {
+        column.setDatabaseFieldLength(cellLength);
       }
     }
   }
+
+  @Override
+  public void close() throws Exception {
+    connection.close();
+    entityManager.close();
+  }
+
+  public PreparedStatement getStatement() {
+    return statement;
+  }
+
+  public void setStatement(PreparedStatement statement) {
+    this.statement = statement;
+  }
+
+  public List<Column> getColumns() {
+    return columns;
+  }
+
+  public AtomicInteger getRowCount() {
+    return rowCount;
+  }
+
 }
