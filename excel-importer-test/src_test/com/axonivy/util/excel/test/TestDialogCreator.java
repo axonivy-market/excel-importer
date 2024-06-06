@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.sql.SQLException;
 
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -18,10 +19,13 @@ import org.junit.jupiter.api.io.TempDir;
 
 import com.axonivy.util.excel.importer.DialogCreator;
 import com.axonivy.util.excel.importer.EntityClassReader;
+import com.axonivy.util.excel.importer.EntityDataLoader;
 import com.axonivy.util.excel.importer.ExcelLoader;
 
 import ch.ivyteam.ivy.dialog.configuration.IUserDialog;
+import ch.ivyteam.ivy.environment.Ivy;
 import ch.ivyteam.ivy.environment.IvyTest;
+import ch.ivyteam.ivy.process.data.persistence.IIvyEntityManager;
 import ch.ivyteam.ivy.process.model.Process;
 import ch.ivyteam.ivy.process.model.element.activity.Script;
 import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogEventStart;
@@ -36,16 +40,27 @@ import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 public class TestDialogCreator {
 
   private EntityClassReader reader;
+  private EntityDataLoader loader;
+  private IIvyEntityManager unit;
+  
+  @BeforeEach
+  void setup() throws SQLException {
+    this.unit = Ivy.persistence().get("testing");
+    this.unit.createEntityManager().clear(); // eager access
+    this.reader = new EntityClassReader(unit);
+    this.loader = new EntityDataLoader(unit);
+  }
 
   @Test
-  void createEntityDialog(@TempDir Path dir) throws IOException, CoreException {
+  void createEntityDialog(@TempDir Path dir) throws IOException, CoreException, SQLException {
+
     Path path = dir.resolve("customers.xlsx");
     TstRes.loadTo(path, "sample.xlsx");
 
     Workbook wb = ExcelLoader.load(path);
     Sheet customerSheet = wb.getSheetAt(0);
-
-    IEntityClass customer = reader.toEntity(customerSheet, "customer");
+    loader.load("customer", customerSheet);
+    IEntityClass customer = reader.createEntity("customer", loader.getColumns()); // Need mock here
     IUserDialog dialog = null;
     try {
       customer.save(new NullProgressMonitor());
@@ -68,8 +83,7 @@ public class TestDialogCreator {
   }
 
   private void assertData(IDataClass dataClass) {
-    assertThat(dataClass.getFields()).extracting(IDataClassField::getName)
-      .containsOnly("entries", "edit");
+    assertThat(dataClass.getFields()).extracting(IDataClassField::getName).containsOnly("entries", "edit");
   }
 
   private void assertProcess(IEntityClass customer, Process process) {
@@ -78,52 +92,39 @@ public class TestDialogCreator {
 
     var delete = process.search().type(HtmlDialogMethodStart.class).name("delete(customer)").findOne();
     String removal = delete.getOutput().getCode();
-    assertThat(removal)
-      .contains("testing.remove(");
+    assertThat(removal).contains("testing.remove(");
 
     var edit = process.search().type(HtmlDialogMethodStart.class).name("edit(customer)").findOne();
     Mappings mappings = edit.getOutput().getMappings();
-    assertThat(mappings.asList())
-      .hasSize(1);
+    assertThat(mappings.asList()).hasSize(1);
 
     var save = process.search().type(HtmlDialogEventStart.class).name("save").findOne();
-    assertThat(save.getOutput().getCode())
-      .contains("ivy.persistence.testing.merge(out.edit)");
+    assertThat(save.getOutput().getCode()).contains("ivy.persistence.testing.merge(out.edit)");
 
     var add = process.search().type(HtmlDialogEventStart.class).name("add").findOne();
     assertThat(add.getOutput().getMappings().asList().get(0).getRightSide())
-      .contains("new "+customer.getName()+"()");
+        .contains("new " + customer.getName() + "()");
   }
 
   private void assertView(String view) {
     assertThat(view).contains("p:dataTable");
-    assertThat(view)
-      .as("visualizes properties of the entity")
-      .contains("firstname")
-      .doesNotContain("<!-- [entity.fields] -->");
+    assertThat(view).as("visualizes properties of the entity").contains("firstname")
+        .doesNotContain("<!-- [entity.fields] -->");
   }
 
   private void assertDetailView(String view) {
-    assertThat(view)
-      .as("visualizes properties of the entity")
-      .contains("firstname")
-      .doesNotContain("<!-- [entity.fields] -->");
-    assertThat(view)
-      .as("navigation to list must be adapted by the template renderer")
-      .doesNotContain("action=\"EntityList\"");
+    assertThat(view).as("visualizes properties of the entity").contains("firstname")
+        .doesNotContain("<!-- [entity.fields] -->");
+    assertThat(view).as("navigation to list must be adapted by the template renderer")
+        .doesNotContain("action=\"EntityList\"");
   }
 
   private static String read(IFile viewFile) throws IOException, CoreException {
-    try(InputStream in = viewFile.getContents()) {
+    try (InputStream in = viewFile.getContents()) {
       var bos = new java.io.ByteArrayOutputStream();
       in.transferTo(bos);
       return new String(bos.toByteArray());
     }
-  }
-
-  @BeforeEach
-  void setup() {
-    this.reader = new EntityClassReader();
   }
 
 }
