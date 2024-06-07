@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
@@ -56,27 +55,26 @@ public class ExcelReader {
     return new ArrayList<>(columnMap.values());
   }
 
-  private static Column toColumn(String name, Cell cell) {
-    var fieldName = fieldName(name);
+  private static Column toColumn(String fieldName, Cell cell) {
     if (cell == null) {
-      return new Column(fieldName, String.class, DEFAULT_STRING_LENGTH, name); // type not known on first row
+      return new Column(fieldName, String.class, DEFAULT_STRING_LENGTH); // type not known on first row
     }
     switch (cell.getCellType()) {
     case NUMERIC:
       if (DateUtil.isCellDateFormatted(cell)) {
-        return new Column(fieldName, Date.class, name);
+        return new Column(fieldName, Date.class);
       }
-      if (Utils.isCellInteger(cell)) {
-        return new Column(fieldName, Integer.class, name);
+      if (CellUtils.isInteger(cell)) {
+        return new Column(fieldName, Integer.class);
       }
-      return new Column(fieldName, Double.class, name);
+      return new Column(fieldName, Double.class);
     case STRING:
       var cellLength = cell.getStringCellValue().length();
-      return new Column(fieldName, String.class, cellLength > DEFAULT_STRING_LENGTH ? cellLength : DEFAULT_STRING_LENGTH, name);
+      return new Column(fieldName, String.class, cellLength > DEFAULT_STRING_LENGTH ? cellLength : DEFAULT_STRING_LENGTH);
     case BOOLEAN:
-      return new Column(fieldName, Boolean.class, name);
+      return new Column(fieldName, Boolean.class);
     default:
-      return new Column(fieldName, String.class, DEFAULT_STRING_LENGTH, name);
+      return new Column(fieldName, String.class, DEFAULT_STRING_LENGTH);
     }
   }
 
@@ -86,7 +84,7 @@ public class ExcelReader {
     }
     if (cell.getCellType() == CellType.NUMERIC 
         && column.getType().equals(Integer.class)
-        && !Utils.isCellInteger(cell)) {
+        && !CellUtils.isInteger(cell)) {
       column.setType(Double.class);
     }
     if (column.getType().equals(String.class)) {
@@ -95,15 +93,5 @@ public class ExcelReader {
         column.setDatabaseFieldLength(cellLength);
       }
     }
-  }
-
-  private static String fieldName(String colName) {
-    colName = colName.replaceAll(" ", "");
-    if (StringUtils.isAllUpperCase(colName)) {
-      return colName.toLowerCase();
-    }
-    colName = colName.replaceAll("\\W", "");
-    colName = colName.replaceAll("[^\\p{ASCII}]", "");
-    return StringUtils.uncapitalize(colName);
   }
 }

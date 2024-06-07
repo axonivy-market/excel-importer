@@ -5,21 +5,18 @@ public class Column {
   private String name;
   private Class<?> type;
   private Integer databaseFieldLength;
-  private String comment;
 
-  public Column(String name, Class<?> type, Integer databaseFieldLength, String comment) {
+  public Column(String name, Class<?> type, Integer databaseFieldLength) {
     super();
     this.name = name;
     this.type = type;
     this.databaseFieldLength = databaseFieldLength;
-    this.comment = comment;
   }
 
-  public Column(String name, Class<?> type, String comment) {
+  public Column(String name, Class<?> type) {
     super();
     this.name = name;
     this.type = type;
-    this.comment = comment;
   }
 
   public String getName() {
@@ -44,14 +41,6 @@ public class Column {
 
   public void setDatabaseFieldLength(Integer databaseFieldLength) {
     this.databaseFieldLength = databaseFieldLength;
-  }
-
-  public String getComment() {
-    return comment;
-  }
-
-  public void setComment(String comment) {
-    this.comment = comment;
   }
 
   @Override

@@ -3,8 +3,8 @@ package com.axonivy.util.excel.importer;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 
-public class Utils {
-  public static boolean isCellInteger(Cell cell) {
+public class CellUtils {
+  public static boolean isInteger(Cell cell) {
     if (cell == null || cell.getCellType() != CellType.NUMERIC) {
       return false;
     }

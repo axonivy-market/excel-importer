@@ -41,8 +41,8 @@ public class EntityClassReader {
 
     withIdField(entity);
     ExcelReader.parseColumns(sheet).stream().forEachOrdered(col -> {
-      var field = entity.addField(col.getName(), col.getType().getName());
-      field.setComment(col.getComment());
+      var field = entity.addField(fieldName(col.getName()), col.getType().getName());
+      field.setComment(col.getName());
       field.setDatabaseFieldLength(String.valueOf(col.getDatabaseFieldLength()));
     });
     return entity;
@@ -55,6 +55,16 @@ public class EntityClassReader {
     id.addModifier(DataClassFieldModifier.ID);
     id.addModifier(DataClassFieldModifier.GENERATED);
     id.setComment("Identifier");
+  }
+
+  private String fieldName(String colName) {
+    colName = colName.replaceAll(" ", "");
+    if (StringUtils.isAllUpperCase(colName)) {
+      return colName.toLowerCase();
+    }
+    colName = colName.replaceAll("\\W", "");
+    colName = colName.replaceAll("[^\\p{ASCII}]", "");
+    return StringUtils.uncapitalize(colName);
   }
 
 }
