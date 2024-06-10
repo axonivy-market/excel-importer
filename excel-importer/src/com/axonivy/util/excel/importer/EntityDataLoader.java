@@ -14,6 +14,7 @@ import javax.persistence.EntityManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -128,8 +129,13 @@ public class EntityDataLoader {
     if (cell == null) {
       return null;
     }
-    if (cell.getCellType() == CellType.NUMERIC)  {
+    if (cell.getCellType() == CellType.NUMERIC) {
+      if (DateUtil.isCellDateFormatted(cell)) {
+        return cell.getDateCellValue();
+      }
       return cell.getNumericCellValue();
+    } else if (cell.getCellType() == CellType.BOOLEAN) {
+      return cell.getBooleanCellValue();
     }
     return cell.getStringCellValue();
   }

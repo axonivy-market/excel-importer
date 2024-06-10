@@ -41,8 +41,9 @@ public class EntityClassReader {
 
     withIdField(entity);
     ExcelReader.parseColumns(sheet).stream().forEachOrdered(col -> {
-      var field = entity.addField(fieldName(col.name()), col.type().getName());
-      field.setComment(col.name());
+      var field = entity.addField(fieldName(col.getName()), col.getType().getName());
+      field.setComment(col.getName());
+      field.setDatabaseFieldLength(String.valueOf(col.getDatabaseFieldLength()));
     });
     return entity;
   }
