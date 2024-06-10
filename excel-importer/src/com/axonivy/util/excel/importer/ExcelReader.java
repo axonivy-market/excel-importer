@@ -37,10 +37,10 @@ public class ExcelReader {
   }
 
   private static List<Column> createEntityFields(List<String> names, Iterator<Row> rowIterator) {
-    Map<String, Column> columnMap = new LinkedHashMap<>();
     if (!rowIterator.hasNext()) {
       return List.of();
     }
+    Map<String, Column> columnMap = new LinkedHashMap<>();
     rowIterator.forEachRemaining(row -> {
       for (int cellIndex = 0; cellIndex < row.getLastCellNum(); cellIndex++) {
         var name = names.get(cellIndex);

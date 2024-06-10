@@ -1,5 +1,8 @@
 package com.axonivy.util.excel.importer;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 public class Column {
 
   private String name;
@@ -44,26 +47,34 @@ public class Column {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)
+  public boolean equals(Object object) {
+    if (this == object)
       return true;
-    if (o == null || getClass() != o.getClass())
+    if (object == null || getClass() != object.getClass())
       return false;
 
-    Column column = (Column) o;
+    Column column = (Column) object;
 
-    if (!name.equals(column.name))
-      return false;
-    if (!type.equals(column.type))
-      return false;
-    return databaseFieldLength != null ? databaseFieldLength.equals(column.databaseFieldLength)
-        : column.databaseFieldLength == null;
+    return new EqualsBuilder()
+        .append(name, column.name)
+        .append(type, column.type)
+        .append(databaseFieldLength, column.databaseFieldLength)
+        .isEquals();
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder(17, 37)
+        .append(name)
+        .append(type)
+        .append(databaseFieldLength)
+        .toHashCode();
   }
 
   @Override
   public String toString() {
-    return "Column{" + "name='" + name + '\'' + ", type=" + type + ", databaseFieldLength="
-        + (databaseFieldLength != null ? databaseFieldLength : "null") + '}';
+    return "Column{" + "name='" + name + "\'" + ", type=" + type + ", databaseFieldLength="
+        + (databaseFieldLength != null ? databaseFieldLength : "null") + "}";
   }
 
 }
