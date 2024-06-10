@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -131,7 +132,7 @@ public class EntityDataLoader {
     }
     if (cell.getCellType() == CellType.NUMERIC) {
       if (DateUtil.isCellDateFormatted(cell)) {
-        return cell.getDateCellValue();
+        return new Timestamp(cell.getDateCellValue().getTime());
       }
       return cell.getNumericCellValue();
     } else if (cell.getCellType() == CellType.BOOLEAN) {
