@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Date;
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Workbook;
@@ -27,7 +27,7 @@ class TestExcelReader {
         .contains("Firstname", "Lastname");
     assertThat(columns).contains(
         new Column("Firstname", String.class, 255), new Column("ZIP", Integer.class),
-        new Column("Amount", Double.class), new Column("Birthdate", Date.class), // should be a date
+        new Column("Amount", Double.class), new Column("Birthdate", Timestamp.class), // should be a date
         new Column("Note", String.class, 811)
     );
   }
