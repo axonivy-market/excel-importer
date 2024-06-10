@@ -51,7 +51,7 @@ public class TestEntityClassCreator {
     assertThat(entity.getField("zulassungsinhaberName").getType())
       .isEqualTo(String.class.getName());
     assertThat(entity.getField("pNRZulassungsinhaber").getType())
-      .isEqualTo(Double.class.getName());
+        .isEqualTo(Integer.class.getName());
   }
 
   @BeforeEach
