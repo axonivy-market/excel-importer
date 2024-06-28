@@ -71,7 +71,7 @@ public class EntityDataLoader {
     rows.forEachRemaining(row -> {
       try {
       rCount.incrementAndGet();
-        insertCallValuesAsParameter(fields, row, stmt);
+        insertCallValuesAsParameter(fields, rCount, row, stmt);
         stmt.addBatch();
       } catch (SQLException ex) {
         throw new RuntimeException(ex);
@@ -81,14 +81,17 @@ public class EntityDataLoader {
     return stmt;
   }
 
-  private static void insertCallValuesAsParameter(List<? extends IEntityClassField> fields, Row row, PreparedStatement stmt) throws SQLException {
+  private static void insertCallValuesAsParameter(List<? extends IEntityClassField> fields, AtomicInteger rCount,
+      Row row, PreparedStatement stmt) throws SQLException {
     int c = 0;
-    for(var field : fields) {
+    for (var field : fields) {
+      Object value;
       if (field.getName().equals("id")) {
-        continue;
+        value = rCount.intValue();
+      } else {
+        Cell cell = row.getCell(c - 1); // id field is not exists in excel file
+        value = getValue(cell);
       }
-      Cell cell = row.getCell(c);
-      Object value = getValue(cell);
       c++;
       stmt.setObject(c, value);
     }
@@ -96,7 +99,6 @@ public class EntityDataLoader {
 
   private static String buildInsertQuery(IEntityClass entity, List<? extends IEntityClassField> fields) {
     String colNames = fields.stream().map(IEntityClassField::getName)
-      .filter(fld -> !fld.equals("id"))
       .collect(Collectors.joining(","));
     String tableName = entity.getDatabaseTableName();
     if (StringUtils.isBlank(tableName)) {
@@ -104,7 +106,6 @@ public class EntityDataLoader {
     }
     var query = new StringBuilder("INSERT INTO "+tableName+" ("+colNames+")\nVALUES (");
     var params = fields.stream().map(IEntityClassField::getName)
-      .filter(fld -> !fld.equals("id"))
       .map(f -> "?").collect(Collectors.joining(", "));
     query.append(params);
     query.append(")");
