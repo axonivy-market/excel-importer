@@ -53,7 +53,6 @@ public class EntityClassReader {
     id.setDatabaseFieldName("id");
     id.addModifier(DataClassFieldModifier.PERSISTENT);
     id.addModifier(DataClassFieldModifier.ID);
-    id.addModifier(DataClassFieldModifier.GENERATED);
     id.setComment("Identifier");
   }
 
