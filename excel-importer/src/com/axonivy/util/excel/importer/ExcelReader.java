@@ -121,10 +121,8 @@ public class ExcelReader {
       return String.valueOf(cell.getBooleanCellValue());
     case FORMULA:
       return cell.getCellFormula();
-    case BLANK:
-      return StringUtils.EMPTY;
     default:
-      return "Unsupported cell type";
+      return StringUtils.EMPTY;
     }
   }
 }
