@@ -91,10 +91,11 @@ public class ExcelReader {
     }
     if (cell.getCellType() == CellType.STRING) {
       column.setType(String.class);
+      column.setDatabaseFieldLength(DEFAULT_STRING_LENGTH);
     }
     if (column.getType().equals(String.class)) {
       var cellValue = getCellValueAsString(cell);
-      if (cellValue.length() > (column.getDatabaseFieldLength() == null ? 0 : column.getDatabaseFieldLength())) {
+      if (cellValue.length() > column.getDatabaseFieldLength()) {
         column.setDatabaseFieldLength(cellValue.length());
       }
     }
@@ -121,7 +122,7 @@ public class ExcelReader {
     case FORMULA:
       return cell.getCellFormula();
     case BLANK:
-      return "";
+      return StringUtils.EMPTY;
     default:
       return "Unsupported cell type";
     }
