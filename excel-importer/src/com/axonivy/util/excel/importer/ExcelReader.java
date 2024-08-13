@@ -1,12 +1,14 @@
 package com.axonivy.util.excel.importer;
 
 import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
@@ -87,11 +89,40 @@ public class ExcelReader {
         && !CellUtils.isInteger(cell)) {
       column.setType(Double.class);
     }
+    if (cell.getCellType() == CellType.STRING) {
+      column.setType(String.class);
+      column.setDatabaseFieldLength(DEFAULT_STRING_LENGTH);
+    }
     if (column.getType().equals(String.class)) {
-      var cellLength = cell.getStringCellValue().length();
-      if (cellLength > column.getDatabaseFieldLength()) {
-        column.setDatabaseFieldLength(cellLength);
+      var cellValue = getCellValueAsString(cell);
+      if (cellValue.length() > column.getDatabaseFieldLength()) {
+        column.setDatabaseFieldLength(cellValue.length());
       }
+    }
+  }
+
+  public static String getCellValueAsString(Cell cell) {
+    if (cell == null) {
+      return StringUtils.EMPTY;
+    }
+    switch (cell.getCellType()) {
+    case STRING:
+      return cell.getStringCellValue();
+    case NUMERIC:
+      if (DateUtil.isCellDateFormatted(cell)) {
+        return cell.getDateCellValue().toString();
+      } else {
+        DecimalFormat decimalFormat = new DecimalFormat("#");
+        decimalFormat.setMaximumFractionDigits(0);
+        decimalFormat.setGroupingUsed(false);
+        return decimalFormat.format(cell.getNumericCellValue());
+      }
+    case BOOLEAN:
+      return String.valueOf(cell.getBooleanCellValue());
+    case FORMULA:
+      return cell.getCellFormula();
+    default:
+      return StringUtils.EMPTY;
     }
   }
 }

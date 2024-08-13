@@ -28,7 +28,9 @@ class TestExcelReader {
     assertThat(columns).contains(
         new Column("Firstname", String.class, 255), new Column("ZIP", Integer.class),
         new Column("Amount", Double.class), new Column("Birthdate", Timestamp.class), // should be a date
-        new Column("Note", String.class, 811)
+        new Column("Note", String.class, 811),
+        new Column("Column contains texts in incorrect number format", String.class, 255),
+        new Column("Column contains both text and numeric", String.class, 255)
     );
   }
 
