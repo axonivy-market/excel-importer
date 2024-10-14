@@ -1,6 +1,11 @@
 # Excel importer
 
-Imports Excel sheets and transforms it into a full featured web application.
+This tool supports you in importing MS Excel tables into your Axon Ivy project.
+The imported table is added as an entity to a project UI, where it is not only displayed but also made editable.
+
+![final-dialog](doc/entity-table.png)
+
+
 
 ## Demo
 
