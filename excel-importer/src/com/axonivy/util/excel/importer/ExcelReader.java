@@ -91,7 +91,6 @@ public class ExcelReader {
     }
     if (cell.getCellType() == CellType.STRING) {
       column.setType(String.class);
-      column.setDatabaseFieldLength(DEFAULT_STRING_LENGTH);
     }
     if (column.getType().equals(String.class)) {
       var cellValue = getCellValueAsString(cell);
