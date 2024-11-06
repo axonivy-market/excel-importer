@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -91,7 +92,9 @@ public class ExcelReader {
     }
     if (cell.getCellType() == CellType.STRING) {
       column.setType(String.class);
-      column.setDatabaseFieldLength(DEFAULT_STRING_LENGTH);
+      if (ObjectUtils.isEmpty(column.getDatabaseFieldLength())) {
+        column.setDatabaseFieldLength(DEFAULT_STRING_LENGTH);
+      }
     }
     if (column.getType().equals(String.class)) {
       var cellValue = getCellValueAsString(cell);
