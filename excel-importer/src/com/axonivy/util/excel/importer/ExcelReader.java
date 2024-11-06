@@ -93,12 +93,12 @@ public class ExcelReader {
     if (cell.getCellType() == CellType.STRING) {
       column.setType(String.class);
       if (ObjectUtils.isEmpty(column.getDatabaseFieldLength())) {
-          column.setDatabaseFieldLength(DEFAULT_STRING_LENGTH);
-        }
+        column.setDatabaseFieldLength(DEFAULT_STRING_LENGTH);
+      }
     }
     if (column.getType().equals(String.class)) {
       var cellValue = getCellValueAsString(cell);
-       if (cellValue.length() > column.getDatabaseFieldLength()) {
+      if (cellValue.length() > column.getDatabaseFieldLength()) {
         column.setDatabaseFieldLength(cellValue.length());
       }
     }
