@@ -1,12 +1,12 @@
 package com.axonivy.util.excel.importer;
 
-import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Date;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -65,7 +65,7 @@ public class ExcelReader {
     switch (cell.getCellType()) {
     case NUMERIC:
       if (DateUtil.isCellDateFormatted(cell)) {
-        return new Column(fieldName, Timestamp.class);
+        return new Column(fieldName, Date.class);
       }
       if (CellUtils.isInteger(cell)) {
         return new Column(fieldName, Integer.class);
