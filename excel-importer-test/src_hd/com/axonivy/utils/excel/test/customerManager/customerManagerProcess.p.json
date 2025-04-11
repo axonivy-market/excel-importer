@@ -1,0 +1,134 @@
+{
+  "format" : "10.0.0",
+  "id" : "196241095471D9AE",
+  "kind" : "HTML_DIALOG",
+  "config" : {
+    "data" : "com.axonivy.utils.excel.test.customerManager.customerManagerData"
+  },
+  "elements" : [ {
+      "id" : "f0",
+      "type" : "HtmlDialogStart",
+      "name" : "start()",
+      "config" : {
+        "callSignature" : "start",
+        "guid" : "1962410958DCC182"
+      },
+      "visual" : {
+        "at" : { "x" : 96, "y" : 64 }
+      },
+      "connect" : { "id" : "f7", "to" : "f6" }
+    }, {
+      "id" : "f1",
+      "type" : "HtmlDialogEnd",
+      "visual" : {
+        "at" : { "x" : 424, "y" : 64 }
+      }
+    }, {
+      "id" : "f3",
+      "type" : "HtmlDialogEventStart",
+      "name" : "close",
+      "config" : {
+        "guid" : "196241095C86BE26"
+      },
+      "visual" : {
+        "at" : { "x" : 96, "y" : 160 }
+      },
+      "connect" : { "id" : "f5", "to" : "f4" }
+    }, {
+      "id" : "f4",
+      "type" : "HtmlDialogExit",
+      "visual" : {
+        "at" : { "x" : 224, "y" : 160 }
+      }
+    }, {
+      "id" : "f6",
+      "type" : "Script",
+      "name" : "load db",
+      "config" : {
+        "output" : {
+          "code" : "out.entries = ivy.persistence.testing.findAll(com.axonivy.utils.excel.test.customer.class);"
+        }
+      },
+      "visual" : {
+        "at" : { "x" : 246, "y" : 64 }
+      },
+      "connect" : { "id" : "f2", "to" : "f1" }
+    }, {
+      "id" : "f8",
+      "type" : "HtmlDialogMethodStart",
+      "name" : "delete(customer)",
+      "config" : {
+        "callSignature" : "delete",
+        "input" : {
+          "params" : [
+            { "name" : "entity", "type" : "com.axonivy.utils.excel.test.customer" }
+          ],
+          "code" : [
+            "import com.axonivy.utils.excel.test.customer;",
+            "customer loaded = ivy.persistence.testing.find(customer.class, param.entity.getId()) as customer;",
+            "ivy.persistence.testing.remove(loaded);",
+            "out.entries.remove(param.entity);"
+          ]
+        },
+        "guid" : "19624109721CD17B"
+      },
+      "visual" : {
+        "at" : { "x" : 96, "y" : 248 }
+      }
+    }, {
+      "id" : "f9",
+      "type" : "HtmlDialogMethodStart",
+      "name" : "edit(customer)",
+      "config" : {
+        "callSignature" : "edit",
+        "input" : {
+          "params" : [
+            { "name" : "entity", "type" : "com.axonivy.utils.excel.test.customer" }
+          ],
+          "map" : {
+            "out.edit" : "param.entity"
+          }
+        },
+        "guid" : "19624109724C64E4"
+      },
+      "visual" : {
+        "at" : { "x" : 96, "y" : 328 }
+      }
+    }, {
+      "id" : "f10",
+      "type" : "HtmlDialogEventStart",
+      "name" : "add",
+      "config" : {
+        "guid" : "1962410972618B6E",
+        "output" : {
+          "map" : {
+            "out.edit" : "new com.axonivy.utils.excel.test.customer()"
+          }
+        }
+      },
+      "visual" : {
+        "at" : { "x" : 96, "y" : 408 }
+      }
+    }, {
+      "id" : "f11",
+      "type" : "HtmlDialogEventStart",
+      "name" : "save",
+      "config" : {
+        "guid" : "196241097271E73E",
+        "output" : {
+          "code" : [
+            "if (!out.edit.#id is initialized) {",
+            "  out.edit = ivy.persistence.testing.persist(out.edit) as com.axonivy.utils.excel.test.customer;",
+            "  out.entries.add(out.edit);",
+            "} else {",
+            "  ivy.persistence.testing.merge(out.edit);",
+            "}",
+            "out.edit = null;"
+          ]
+        }
+      },
+      "visual" : {
+        "at" : { "x" : 96, "y" : 488 }
+      }
+    } ]
+}
