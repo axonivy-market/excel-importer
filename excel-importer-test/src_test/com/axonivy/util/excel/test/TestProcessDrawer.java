@@ -18,10 +18,10 @@ import com.axonivy.util.excel.importer.ExcelLoader;
 import com.axonivy.util.excel.importer.ProcessDrawer;
 
 import ch.ivyteam.ivy.environment.IvyTest;
-import ch.ivyteam.ivy.process.IProcess;
 import ch.ivyteam.ivy.process.model.Process;
 import ch.ivyteam.ivy.process.model.element.activity.DialogCall;
 import ch.ivyteam.ivy.process.model.element.activity.value.dialog.UserDialogId;
+import ch.ivyteam.ivy.process.rdm.IProcess;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 
 @IvyTest
@@ -41,7 +41,7 @@ public class TestProcessDrawer {
     IEntityClass customer = reader.toEntity(customerSheet, "customer");
     IProcess processRdm = null;
     try {
-      customer.save(new NullProgressMonitor());
+      customer.save();
 
       var drawer = new ProcessDrawer(reader.manager.getProject());
       processRdm = drawer.drawManager(customer);
@@ -50,7 +50,7 @@ public class TestProcessDrawer {
       DialogCall callHd = process.search().type(DialogCall.class).findOne();
       assertThat(callHd.getName()).contains("customer");
       assertThat(callHd.getTargetDialog().getId())
-        .isNotEqualTo(UserDialogId.EMPTY);
+          .isNotEqualTo(UserDialogId.EMPTY);
 
     } finally {
       customer.getResource().delete(true, new NullProgressMonitor());

@@ -141,7 +141,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
   }
 
   private List<?> importData(Sheet sheet, IEntityClass newEntity, IProcessModelVersion pmv) throws Exception {
-    var persist = pmv.getAdapter(IPersistenceContext.class);
+    var persist = ch.ivyteam.ivy.process.data.persistence.PersistenceContextFactory.of(pmv);
     var ivyEntities = persist.get(selectedPersistence);
     EntityDataLoader loader = new EntityDataLoader(ivyEntities);
 
@@ -250,7 +250,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     }
     var main = IProcessDataPersistenceConfigManager.instance();
     var local = main.getProjectDataModelFor(selectedSourceProject.getProject());
-    return local.getDataModels(ProjectRelationSearchScope.CURRENT_AND_ALL_REQUIRED_PROJECTS, null)
+    return local.getDataModels(ProjectRelationSearchScope.CURRENT_AND_ALL_REQUIRED_PROJECTS)
       .getModels().stream()
       .flatMap(c -> c.getPersistenceUnitConfigs().stream())
       .map(PersistenceUnit::getName)

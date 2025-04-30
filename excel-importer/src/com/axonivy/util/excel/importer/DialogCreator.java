@@ -14,11 +14,13 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 
 import ch.ivyteam.ivy.IvyConstants;
+import ch.ivyteam.ivy.designer.dialog.jsf.ui.JsfViewTechnologyDesignerUi;
+import ch.ivyteam.ivy.designer.ui.view.ViewTechnologyDesignerUiRegistry;
 import ch.ivyteam.ivy.dialog.configuration.DialogCreationParameters;
 import ch.ivyteam.ivy.dialog.configuration.IUserDialog;
 import ch.ivyteam.ivy.dialog.configuration.IUserDialogManager;
-import ch.ivyteam.ivy.dialog.configuration.ViewLayout;
-import ch.ivyteam.ivy.process.IProcess;
+import ch.ivyteam.ivy.dialog.view.layout.ViewLayout;
+import ch.ivyteam.ivy.process.model.element.activity.value.CallSignatureRef;
 import ch.ivyteam.ivy.process.model.element.activity.value.dialog.UserDialogId;
 import ch.ivyteam.ivy.process.model.element.activity.value.dialog.UserDialogStart;
 import ch.ivyteam.ivy.process.model.element.event.start.value.CallSignature;
@@ -48,13 +50,13 @@ public class DialogCreator {
     prepareTemplate(project, "frame-10");
     String dialogId = target.getId().getRawId();
     var params = new DialogCreationParameters.Builder(project, dialogId)
-      .viewTechId(IvyConstants.VIEW_TECHONOLOGY_JSF)
-      .signature(target.getStartMethod())
+      .viewTechId(IvyConstants.ViewTechnology.JSF)
+      .signature(new CallSignature(target.getStartMethod().getName()))
       .dataClassFields(List.of(entries, edit))
       .toCreationParams();
-    var userDialog = local.createProjectUserDialog(params, null);
+    var userDialog = local.createProjectUserDialog(params);
 
-    IProcess processRdm = userDialog.getProcess(null);
+    var processRdm = userDialog.getProcess();
     new DialogProcess(processRdm.getModel(), entity, unit).extendProcess();
     processRdm.save();
 
@@ -82,9 +84,9 @@ public class DialogCreator {
 
   private void prepareTemplate(IProject project, String template) {
     try {
-      var view = ch.ivyteam.ivy.dialog.ui.ViewTechnologyDesignerUiRegistry.getInstance().getViewTechnology(IvyConstants.VIEW_TECHONOLOGY_JSF);
+      var view = (JsfViewTechnologyDesignerUi) ViewTechnologyDesignerUiRegistry.getViewTechnology(IvyConstants.ViewTechnology.JSF);
       IIvyProject ivyProject = IvyProjectNavigationUtil.getIvyProject(project);
-      List<ViewLayout> layouts = view.getViewLayoutProvider().getViewLayouts(ivyProject);
+      List<ViewLayout> layouts = view.getViewLayoutProvider().getViewLayouts(ivyProject.project());
       Optional<ViewLayout> framed = layouts.stream().filter(l -> l.getLayoutName().contains("2 Column")).findFirst();
       framed.get().getViewContent("nevermind", template, List.of()); // just load to web-content
     } catch (Throwable ex) {
@@ -146,7 +148,7 @@ public class DialogCreator {
 
   public static UserDialogStart dialogStartFor(IEntityClass entity) {
     var dialogId = UserDialogId.create(entity.getName()+"Manager");
-    var target = new UserDialogStart(dialogId, new CallSignature("start"));
+    var target = new UserDialogStart(dialogId, new CallSignatureRef("start"));
     return target;
   }
 

@@ -37,7 +37,7 @@ public class EntityClassReader {
     if (manager.findDataClass(fqName) != null) {
       throw new RuntimeException("entity "+fqName+" already exists");
     }
-    var entity = manager.createEntityClass(fqName, null);
+    var entity = manager.createEntityClass(fqName);
 
     withIdField(entity);
     ExcelReader.parseColumns(sheet).stream().forEachOrdered(col -> {

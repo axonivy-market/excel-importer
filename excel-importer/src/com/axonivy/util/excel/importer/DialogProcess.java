@@ -51,8 +51,8 @@ public class DialogProcess {
     Script loader = process.add().element(Script.class);
     loader.setName("load db");
     loader.setCode("""
-            out.entries = ivy.persistence.%s.findAll(%s.class);
-            """.formatted(unit, entity.getName()));
+      out.entries = ivy.persistence.%s.findAll(%s.class);
+      """.formatted(unit, entity.getName()));
 
     DiagramShape scriptShape = loader.getShape();
     scriptShape.moveTo(start.getShape().getBounds().getCenter().shiftX(150));
@@ -74,11 +74,11 @@ public class DialogProcess {
       out.entries.remove(param.entity);
       """;
     var code = template
-            .replaceAll("NAME", entity.getName())
-            .replaceAll("SHORT", entity.getSimpleName())
-            .replaceAll("UNIT", unit);
+        .replaceAll("NAME", entity.getName())
+        .replaceAll("SHORT", entity.getSimpleName())
+        .replaceAll("UNIT", unit);
 
-    delete.setOutput(new MappingCode(code));
+    delete.setParameterMappings(new MappingCode(code));
   }
 
   private void addEditAction() {
@@ -87,13 +87,13 @@ public class DialogProcess {
     var param = new VariableDesc("entity", new QualifiedType(entity.getName()));
     edit.setSignature(new CallSignature("edit").setInputParameters(List.of(param)));
 
-    edit.setOutput(new MappingCode(Mappings.single("out.edit", "param.entity")));
+    edit.setParameterMappings(new MappingCode(Mappings.single("out.edit", "param.entity")));
   }
 
   private void addCreateAction() {
     var add = addEvent();
     add.setName("add");
-    add.setOutput(new MappingCode(Mappings.single("out.edit", "new "+entity.getName()+"()")));
+    add.setOutput(new MappingCode(Mappings.single("out.edit", "new " + entity.getName() + "()")));
   }
 
   private void addSaveAction() {
