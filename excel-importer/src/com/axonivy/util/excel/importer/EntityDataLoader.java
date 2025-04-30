@@ -113,7 +113,7 @@ public class EntityDataLoader {
   }
 
   public Class<?> createTable(IEntityClass entity) {
-    entity.buildJavaSource(List.of(), null);
+    entity.buildJavaSource();
     var java = IJavaConfigurationManager.instance().getJavaConfiguration(entity.getResource().getProject());
     var ivy = IIvyProjectManager.instance().getIvyProject(entity.getResource().getProject());
     Class<?> entityClass;

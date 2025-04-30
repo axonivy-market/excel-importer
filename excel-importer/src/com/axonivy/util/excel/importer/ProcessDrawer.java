@@ -3,14 +3,14 @@ package com.axonivy.util.excel.importer;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
-import ch.ivyteam.ivy.process.IProcess;
 import ch.ivyteam.ivy.process.model.Process;
 import ch.ivyteam.ivy.process.model.diagram.Diagram;
 import ch.ivyteam.ivy.process.model.element.activity.DialogCall;
 import ch.ivyteam.ivy.process.model.element.event.end.TaskEnd;
 import ch.ivyteam.ivy.process.model.element.event.start.RequestStart;
 import ch.ivyteam.ivy.process.model.element.event.start.value.CallSignature;
-import ch.ivyteam.ivy.process.resource.ProcessCreator;
+import ch.ivyteam.ivy.process.rdm.IProcess;
+import ch.ivyteam.ivy.process.rdm.resource.ProcessCreator;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 
 @SuppressWarnings("restriction")
@@ -28,7 +28,7 @@ public class ProcessDrawer {
     var rdm = ProcessCreator.create(project, "Manage"+name)
       .createDefaultContent(false)
       .toCreator()
-      .createDataModel(new NullProgressMonitor());
+      .createDataModel();
 
     Process process = rdm.getModel();
     drawProcess(process);
