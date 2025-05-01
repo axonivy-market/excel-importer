@@ -46,7 +46,7 @@ public class TestDialogCreator {
     Workbook wb = ExcelLoader.load(path);
     Sheet customerSheet = wb.getSheetAt(0);
 
-    IEntityClass customer = reader.toEntity(customerSheet, "customer");
+    IEntityClass customer = reader.toEntity(customerSheet, "customer", "postgres");
     IUserDialog dialog = null;
     try {
       customer.save();

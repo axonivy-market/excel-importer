@@ -37,7 +37,7 @@ public class TestEntityDataLoader {
     Workbook wb = ExcelLoader.load(path);
     Sheet customerSheet = wb.getSheetAt(0);
 
-    IEntityClass customer = reader.toEntity(customerSheet, "customer");
+    IEntityClass customer = reader.toEntity(customerSheet, "customer", "postgres");
     try {
       customer.save();
       Class<?> entity = loader.createTable(customer);
@@ -58,7 +58,7 @@ public class TestEntityDataLoader {
     Workbook wb = ExcelLoader.load(path);
     Sheet medSheet = wb.getSheetAt(0);
 
-    IEntityClass meds = reader.toEntity(medSheet, "meds");
+    IEntityClass meds = reader.toEntity(medSheet, "meds", "maria");
     try {
       meds.save();
       Class<?> entity = loader.createTable(meds);

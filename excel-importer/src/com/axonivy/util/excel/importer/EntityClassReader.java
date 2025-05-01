@@ -33,17 +33,17 @@ public class EntityClassReader {
     Workbook wb = ExcelLoader.load(filePath);
     String dataName = StringUtils.substringBeforeLast(filePath.getFileName().toString(), ".");
     dataName = StringUtils.capitalize(dataName);
-    return toEntity(wb.getSheetAt(0), dataName);
+    return toEntity(wb.getSheetAt(0), dataName, "");
   }
 
-  public IEntityClass toEntity(Sheet sheet, String dataName) {
+  public IEntityClass toEntity(Sheet sheet, String dataName, String dbVendor) {
     String fqName = manager.getDefaultNamespace() + "." + dataName;
     if (manager.findDataClass(fqName) != null) {
       throw new RuntimeException("entity " + fqName + " already exists");
     }
     var entity = manager.createEntityClass(fqName);
 
-    withIdField(entity);
+    withIdField(entity, dbVendor);
     ExcelReader.parseColumns(sheet).stream().forEachOrdered(col -> {
       var field = entity.addField(fieldName(col.getName()), col.getType().getName());
       field.setComment(col.getName());
@@ -52,16 +52,22 @@ public class EntityClassReader {
     return entity;
   }
 
-  private void withIdField(IEntityClass entity) {
+  private void withIdField(IEntityClass entity, String dbVendor) {
     IEntityClassField id = entity.addField("id", Integer.class.getSimpleName());
     id.setDatabaseFieldName("id");
     id.addModifier(DataClassFieldModifier.ID);
     id.addModifier(DataClassFieldModifier.PERSISTENT);
+    if (dbVendor.contains("postgres")) {
+      appendIdentityStrategy(id);
+    }
+    id.setComment("Identifier");
+  }
+
+  private static void appendIdentityStrategy(IEntityClassField id) {
     id.addAnnotation(new DataClassAnnotation(
         "@" + GeneratedValue.class.getName() + "(strategy="
             + GenerationType.class.getName() + "." + GenerationType.IDENTITY.name()
             + ")"));
-    id.setComment("Identifier");
   }
 
   private String fieldName(String colName) {

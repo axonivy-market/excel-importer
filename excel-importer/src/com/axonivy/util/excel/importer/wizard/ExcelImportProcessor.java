@@ -3,6 +3,7 @@ package com.axonivy.util.excel.importer.wizard;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.util.List;
 import java.util.Objects;
 
@@ -17,6 +18,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.internal.SessionImpl;
 
 import com.axonivy.util.excel.importer.DialogCreator;
 import com.axonivy.util.excel.importer.EntityClassReader;
@@ -113,7 +116,8 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     }
     Sheet sheet = wb.getSheetAt(0);
 
-    var newEntity = new EntityClassReader(manager).toEntity(sheet, entityName);
+    String vendor = vendor(manager.getProcessModelVersion());
+    var newEntity = new EntityClassReader(manager).toEntity(sheet, entityName, vendor);
     newEntity.save();
     SwtRunnable.execNowOrAsync(() -> EclipseUiUtil.openEditor(newEntity));
     monitor.setTaskName("Created EntityClass " + entityName);
@@ -136,8 +140,26 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     SwtRunnable.execNowOrAsync(() -> EclipseUiUtil.openEditor(process));
   }
 
+  private String vendor(IProcessModelVersion pmv) {
+    var persist = PersistenceContextFactory.of(pmv);
+    var ivyEntities = persist.get(selectedPersistence);
+    var em = ivyEntities.createEntityManager();
+    try {
+      JdbcConnectionAccess access = em.unwrap(SessionImpl.class).getJdbcConnectionAccess();
+      try {
+        Connection con = access.obtainConnection();
+        return con.getMetaData().getClass().getName();
+      } catch (Exception ex) {
+        return "";
+      }
+    } finally {
+      em.close();
+    }
+  }
+
   private List<?> importData(Sheet sheet, IEntityClass newEntity, IProcessModelVersion pmv) throws Exception {
     var persist = PersistenceContextFactory.of(pmv);
+
     var ivyEntities = persist.get(selectedPersistence);
     EntityDataLoader loader = new EntityDataLoader(ivyEntities);
 
