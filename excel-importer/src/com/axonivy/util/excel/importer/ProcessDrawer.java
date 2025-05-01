@@ -1,7 +1,6 @@
 package com.axonivy.util.excel.importer;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.NullProgressMonitor;
 
 import ch.ivyteam.ivy.process.model.Process;
 import ch.ivyteam.ivy.process.model.diagram.Diagram;
@@ -13,10 +12,9 @@ import ch.ivyteam.ivy.process.rdm.IProcess;
 import ch.ivyteam.ivy.process.rdm.resource.ProcessCreator;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 
-@SuppressWarnings("restriction")
 public class ProcessDrawer {
 
-  private IProject project;
+  private final IProject project;
 
   public ProcessDrawer(IProject project) {
     this.project = project;
@@ -25,16 +23,16 @@ public class ProcessDrawer {
   public IProcess drawManager(IEntityClass entity) {
     String name = entity.getSimpleName();
 
-    var rdm = ProcessCreator.create(project, "Manage"+name)
-      .createDefaultContent(false)
-      .toCreator()
-      .createDataModel();
+    var rdm = ProcessCreator.create(project, "Manage" + name)
+        .createDefaultContent(false)
+        .toCreator()
+        .createDataModel();
 
     Process process = rdm.getModel();
     drawProcess(process);
 
     DialogCall call = process.search().type(DialogCall.class).findOne();
-    call.setName(name+" UI");
+    call.setName(name + " UI");
     call.setTargetDialog(DialogCreator.dialogStartFor(entity));
 
     rdm.save();

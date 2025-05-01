@@ -31,7 +31,6 @@ import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClassField;
 import ch.ivyteam.log.Logger;
 
-@SuppressWarnings("restriction")
 public class DialogCreator {
 
   private static final Logger LOGGER = Logger.getLogger(DialogCreator.class);
