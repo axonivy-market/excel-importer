@@ -40,6 +40,7 @@ public class DialogProcess {
     addEditAction();
     addCreateAction();
     addSaveAction();
+    addCancelAction();
   }
 
   private void addDbLoaderScript() {
@@ -100,7 +101,7 @@ public class DialogProcess {
     var save = addEvent();
     save.setName("save");
     String doSave = """
-      if (!out.edit.#id is initialized) {
+      if (out.edit.id <= 0) {
         out.edit = ivy.persistence.UNIT.persist(out.edit) as ENTITY;
         out.entries.add(out.edit);
       } else {
@@ -111,6 +112,19 @@ public class DialogProcess {
         .replaceAll("UNIT", unit)
         .replaceAll("ENTITY", entity.getName());
     save.setOutput(new MappingCode(doSave));
+  }
+
+  private void addCancelAction() {
+    var cancel = addEvent();
+    cancel.setName("cancel");
+    var doCancel = """
+      if (out.edit.id > 0) {
+        ivy.persistence.UNIT.refresh(out.edit);
+      }
+      out.edit = null;
+      """
+        .replaceAll("UNIT", unit);
+    cancel.setOutput(new MappingCode(doCancel));
   }
 
   private HtmlDialogMethodStart addMethod() {
