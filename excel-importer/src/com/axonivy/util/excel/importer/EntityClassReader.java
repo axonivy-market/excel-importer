@@ -2,6 +2,9 @@ package com.axonivy.util.excel.importer;
 
 import java.nio.file.Path;
 
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -12,6 +15,7 @@ import ch.ivyteam.ivy.scripting.dataclass.IDataClassManager;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClassField;
 import ch.ivyteam.ivy.scripting.dataclass.IProjectDataClassManager;
+import ch.ivyteam.ivy.scripting.streamInOut.DataClassAnnotation;
 
 public class EntityClassReader {
 
@@ -33,9 +37,9 @@ public class EntityClassReader {
   }
 
   public IEntityClass toEntity(Sheet sheet, String dataName) {
-    String fqName = manager.getDefaultNamespace()+"."+dataName;
+    String fqName = manager.getDefaultNamespace() + "." + dataName;
     if (manager.findDataClass(fqName) != null) {
-      throw new RuntimeException("entity "+fqName+" already exists");
+      throw new RuntimeException("entity " + fqName + " already exists");
     }
     var entity = manager.createEntityClass(fqName);
 
@@ -51,13 +55,17 @@ public class EntityClassReader {
   private void withIdField(IEntityClass entity) {
     IEntityClassField id = entity.addField("id", Integer.class.getSimpleName());
     id.setDatabaseFieldName("id");
-    id.addModifier(DataClassFieldModifier.PERSISTENT);
     id.addModifier(DataClassFieldModifier.ID);
+    id.addModifier(DataClassFieldModifier.PERSISTENT);
+    id.addAnnotation(new DataClassAnnotation(
+        "@" + GeneratedValue.class.getName() + "(strategy="
+            + GenerationType.class.getName() + "." + GenerationType.IDENTITY.name()
+            + ")"));
     id.setComment("Identifier");
   }
 
   private String fieldName(String colName) {
-    colName = colName.replaceAll(" ", "");
+    colName = colName.replace(" ", "");
     if (StringUtils.isAllUpperCase(colName)) {
       return colName.toLowerCase();
     }
