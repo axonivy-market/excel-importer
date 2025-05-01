@@ -18,7 +18,6 @@ import ch.ivyteam.ivy.process.model.value.scripting.QualifiedType;
 import ch.ivyteam.ivy.process.model.value.scripting.VariableDesc;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 
-@SuppressWarnings("restriction")
 public class DialogProcess {
 
   private final Process process;
