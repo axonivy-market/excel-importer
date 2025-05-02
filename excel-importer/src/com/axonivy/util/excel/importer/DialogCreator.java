@@ -1,6 +1,5 @@
 package com.axonivy.util.excel.importer;
 
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -32,7 +31,6 @@ import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClassField;
 import ch.ivyteam.log.Logger;
 
-@SuppressWarnings("restriction")
 public class DialogCreator {
 
   private static final Logger LOGGER = Logger.getLogger(DialogCreator.class);
@@ -44,16 +42,17 @@ public class DialogCreator {
 
     var target = dialogStartFor(entity);
 
-    VariableDesc entries = new VariableDesc("entries", new QualifiedType(List.class.getName(), List.of(new QualifiedType(entity.getName()))));
-    VariableDesc edit = new VariableDesc("edit", new QualifiedType(entity.getName()));
+    var entries = new VariableDesc("entries", new QualifiedType(List.class.getName(), List.of(new QualifiedType(entity.getName()))));
+    var edit = new VariableDesc("edit", new QualifiedType(entity.getName()));
+    var editing = new VariableDesc("editing", new QualifiedType(Boolean.class.getName()));
 
     prepareTemplate(project, "frame-10");
     String dialogId = target.getId().getRawId();
     var params = new DialogCreationParameters.Builder(project, dialogId)
-      .viewTechId(IvyConstants.ViewTechnology.JSF)
-      .signature(new CallSignature(target.getStartMethod().getName()))
-      .dataClassFields(List.of(entries, edit))
-      .toCreationParams();
+        .viewTechId(IvyConstants.ViewTechnology.JSF)
+        .signature(new CallSignature(target.getStartMethod().getName()))
+        .dataClassFields(List.of(entries, edit, editing))
+        .toCreationParams();
     var userDialog = local.createProjectUserDialog(params);
 
     var processRdm = userDialog.getProcess();
@@ -71,14 +70,18 @@ public class DialogCreator {
 
     String rendered = renderFields(entity, template, this::renderDetail);
     rendered = rendered.replaceAll("action=\"EntityList\"",
-      "action=\"%s\"".formatted(entity.getSimpleName()+"Manager"));
+        "action=\"%s\"".formatted(entity.getSimpleName() + "Manager"));
+
+    rendered = rendered.replace(
+        "<p:commandLink id=\"cancel\" ",
+        "<p:commandLink id=\"cancel\" actionListener=\"#{logic.cancel}\" ");
 
     var dir = (IFolder) userDialog.getResource();
     var detailView = dir.getFile("EntityDetail.xhtml");
-    try(InputStream bis = new ByteArrayInputStream(rendered.getBytes())) {
+    try (InputStream bis = new ByteArrayInputStream(rendered.getBytes())) {
       detailView.create(bis, true, null);
     } catch (Exception ex) {
-      throw new RuntimeException("Failed to write detail view "+detailView, ex);
+      throw new RuntimeException("Failed to write detail view " + detailView, ex);
     }
   }
 
@@ -101,55 +104,51 @@ public class DialogCreator {
   }
 
   private static String readTemplate(String resource) {
-    try(InputStream is = DialogCreator.class.getResourceAsStream("/com/axonivy/util/excel/importer/EntityManager/"+resource)) {
+    try (InputStream is = DialogCreator.class.getResourceAsStream("/com/axonivy/util/excel/importer/EntityManager/" + resource)) {
       var bos = new ByteArrayOutputStream();
       is.transferTo(bos);
-      var template = new String(bos.toByteArray());
-      return template;
+      return new String(bos.toByteArray());
     } catch (Exception ex) {
-      throw new RuntimeException("Failed to read template "+resource);
+      throw new RuntimeException("Failed to read template " + resource);
     }
   }
 
   private static void write(IFile view, String content) {
-    try(var bis = new ByteArrayInputStream(content.getBytes())){
+    try (var bis = new ByteArrayInputStream(content.getBytes())) {
       view.setContents(bis, 0, null);
     } catch (Exception ex) {
-      throw new RuntimeException("Failed to extend view for "+view, ex);
+      throw new RuntimeException("Failed to extend view for " + view, ex);
     }
   }
 
   private String renderFields(IEntityClass entity, String template, Function<IEntityClassField, String> renderer) {
     String fieldXhtml = entity.getFields().stream()
-      .filter(fld -> !fld.getName().equals("id"))
-      .map(renderer)
-      .collect(Collectors.joining("\n"));
+        .filter(fld -> !"id".equals(fld.getName()))
+        .map(renderer)
+        .collect(Collectors.joining("\n"));
     return template.replace("<!-- [entity.fields] -->", fieldXhtml);
   }
 
   private String renderColumn(IEntityClassField field) {
-    String fieldXhtml = """
-        <p:column headerText="%s">
-          <h:outputText value="#{entity.%s}"/>
-        </p:column>
-    """.formatted(field.getComment(), field.getName());
-    return fieldXhtml;
+    return """
+          <p:column headerText="%s">
+            <h:outputText value="#{entity.%s}"/>
+          </p:column>
+      """.formatted(field.getComment(), field.getName());
   }
 
   private String renderDetail(IEntityClassField field) {
-    String fieldXhtml = """
-        <p:outputLabel for="FIELD" value="LABEL" />
-        <p:inputText id="FIELD" value="#{data.edit.FIELD}"></p:inputText>
-    """
-      .replaceAll("FIELD", field.getName())
-      .replaceAll("LABEL", field.getComment());
-    return fieldXhtml;
+    return """
+          <p:outputLabel for="FIELD" value="LABEL" />
+          <p:inputText id="FIELD" value="#{data.edit.FIELD}"></p:inputText>
+      """
+        .replaceAll("FIELD", field.getName())
+        .replaceAll("LABEL", field.getComment());
   }
 
   public static UserDialogStart dialogStartFor(IEntityClass entity) {
-    var dialogId = UserDialogId.create(entity.getName()+"Manager");
-    var target = new UserDialogStart(dialogId, new CallSignatureRef("start"));
-    return target;
+    var dialogId = UserDialogId.create(entity.getName() + "Manager");
+    return new UserDialogStart(dialogId, new CallSignatureRef("start"));
   }
 
 }
