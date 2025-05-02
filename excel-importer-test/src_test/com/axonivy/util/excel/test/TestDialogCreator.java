@@ -26,6 +26,7 @@ import ch.ivyteam.ivy.process.model.Process;
 import ch.ivyteam.ivy.process.model.element.activity.Script;
 import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogEventStart;
 import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogMethodStart;
+import ch.ivyteam.ivy.process.model.element.value.Mapping;
 import ch.ivyteam.ivy.process.model.element.value.Mappings;
 import ch.ivyteam.ivy.scripting.dataclass.IDataClass;
 import ch.ivyteam.ivy.scripting.dataclass.IDataClassField;
@@ -69,7 +70,7 @@ public class TestDialogCreator {
 
   private void assertData(IDataClass dataClass) {
     assertThat(dataClass.getFields()).extracting(IDataClassField::getName)
-        .containsOnly("entries", "edit");
+        .containsOnly("entries", "edit", "editing");
   }
 
   private void assertProcess(IEntityClass customer, Process process) {
@@ -83,16 +84,24 @@ public class TestDialogCreator {
 
     var edit = process.search().type(HtmlDialogMethodStart.class).name("edit(customer)").findOne();
     Mappings mappings = edit.getParameterMappings().getMappings();
-    assertThat(mappings.asList())
-        .hasSize(1);
+    assertThat(mappings.asList()).contains(
+        new Mapping("out.edit", "param.entity"),
+        new Mapping("out.editing", "true"));
 
     var save = process.search().type(HtmlDialogEventStart.class).name("save").findOne();
     assertThat(save.getOutput().getCode())
-        .contains("ivy.persistence.testing.merge(out.edit)");
+        .contains("ivy.persistence.testing.merge(in.edit)");
 
     var add = process.search().type(HtmlDialogEventStart.class).name("add").findOne();
     assertThat(add.getOutput().getMappings().asList().get(0).getRightSide())
         .contains("new " + customer.getName() + "()");
+    assertThat(add.getOutput().getCode())
+        .as("modify flag on 'in' to guarantee updates")
+        .isEqualTo("in.editing = false;");
+
+    var cancel = process.search().type(HtmlDialogEventStart.class).name("cancel").findOne();
+    assertThat(cancel.getOutput().getCode())
+        .contains("in.edit = null;");
   }
 
   private void assertView(String view) {
