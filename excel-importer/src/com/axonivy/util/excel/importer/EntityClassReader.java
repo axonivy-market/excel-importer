@@ -4,6 +4,7 @@ import java.nio.file.Path;
 
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
+import javax.persistence.SequenceGenerator;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -66,7 +67,12 @@ public class EntityClassReader {
   private static void appendIdentityStrategy(IEntityClassField id) {
     id.addAnnotation(new DataClassAnnotation(
         "@" + GeneratedValue.class.getName() + "(strategy="
-            + GenerationType.class.getName() + "." + GenerationType.IDENTITY.name()
+            + GenerationType.class.getName() + "." + GenerationType.SEQUENCE.name()
+            + ", generator=\"next_id\""
+            + ")"));
+    id.addAnnotation(new DataClassAnnotation(
+        "@" + SequenceGenerator.class.getName() + "("
+            + "name = \"next_id\", initialValue = 30000"
             + ")"));
   }
 
