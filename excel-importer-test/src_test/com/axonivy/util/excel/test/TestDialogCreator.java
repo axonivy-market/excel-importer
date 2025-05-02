@@ -85,20 +85,23 @@ public class TestDialogCreator {
     var edit = process.search().type(HtmlDialogMethodStart.class).name("edit(customer)").findOne();
     Mappings mappings = edit.getParameterMappings().getMappings();
     assertThat(mappings.asList()).contains(
-		new Mapping("out.edit", "param.entity"), 
-    	new Mapping("out.editing", "true"));
+        new Mapping("out.edit", "param.entity"),
+        new Mapping("out.editing", "true"));
 
     var save = process.search().type(HtmlDialogEventStart.class).name("save").findOne();
     assertThat(save.getOutput().getCode())
-        .contains("ivy.persistence.testing.merge(out.edit)");
+        .contains("ivy.persistence.testing.merge(in.edit)");
 
     var add = process.search().type(HtmlDialogEventStart.class).name("add").findOne();
     assertThat(add.getOutput().getMappings().asList().get(0).getRightSide())
         .contains("new " + customer.getName() + "()");
-    
+    assertThat(add.getOutput().getCode())
+        .as("modify flag on 'in' to guarantee updates")
+        .isEqualTo("in.editing = false;");
+
     var cancel = process.search().type(HtmlDialogEventStart.class).name("cancel").findOne();
     assertThat(cancel.getOutput().getCode())
-    	.contains("out.edit = null;");
+        .contains("in.edit = null;");
   }
 
   private void assertView(String view) {

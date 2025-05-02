@@ -8,6 +8,7 @@ import ch.ivyteam.ivy.process.model.diagram.shape.DiagramShape;
 import ch.ivyteam.ivy.process.model.diagram.value.Position;
 import ch.ivyteam.ivy.process.model.diagram.value.PositionDelta;
 import ch.ivyteam.ivy.process.model.element.activity.Script;
+import ch.ivyteam.ivy.process.model.element.event.end.dialog.html.HtmlDialogEnd;
 import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogEventStart;
 import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogMethodStart;
 import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogStart;
@@ -97,15 +98,15 @@ public class DialogProcess {
     var add = addEvent();
     add.setName("add");
     add.setOutput(new MappingCode(new Mappings(
-        new Mapping("out.edit", "new " + entity.getName() + "()"),
-        new Mapping("out.editing", "false"))));
+        new Mapping("out.edit", "new " + entity.getName() + "()")),
+        "in.editing = false;"));
   }
 
   private void addSaveAction() {
     var save = addEvent();
     save.setName("save");
     String doSave = """
-      ivy.log.info("edit="+in.editing+ " /what="+in.edit);
+      ivy.log.debug("edit="+in.editing+ " /what="+in.edit);
       if (in.editing) {
         ivy.persistence.UNIT.merge(in.edit);
       } else {
@@ -123,6 +124,7 @@ public class DialogProcess {
     var cancel = addEvent();
     cancel.setName("cancel");
     var doCancel = """
+      ivy.log.debug("canceling edit="+in.editing+ " /what="+in.edit);
       if (in.editing) {
         ivy.persistence.UNIT.refresh(in.edit);
       }
@@ -140,10 +142,19 @@ public class DialogProcess {
     return addAction(HtmlDialogEventStart.class);
   }
 
+  private HtmlDialogEnd addEndFor(NodeElement other) {
+    HtmlDialogEnd end = process.add().element(HtmlDialogEnd.class);
+    Position center = other.getShape().getBounds().getCenter();
+    end.getShape().moveTo(center.shiftX(100));
+    other.getShape().edges().connectTo(end.getShape());
+    return end;
+  }
+
   private <T extends NodeElement> T addAction(Class<T> type) {
     var action = process.add().element(type);
     action.getShape().moveTo(new Position(x, y));
     y += 80;
+    addEndFor(action);
     return action;
   }
 
