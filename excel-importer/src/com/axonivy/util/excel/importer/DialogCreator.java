@@ -42,15 +42,16 @@ public class DialogCreator {
 
     var target = dialogStartFor(entity);
 
-    VariableDesc entries = new VariableDesc("entries", new QualifiedType(List.class.getName(), List.of(new QualifiedType(entity.getName()))));
-    VariableDesc edit = new VariableDesc("edit", new QualifiedType(entity.getName()));
+    var entries = new VariableDesc("entries", new QualifiedType(List.class.getName(), List.of(new QualifiedType(entity.getName()))));
+    var edit = new VariableDesc("edit", new QualifiedType(entity.getName()));
+    var editing = new VariableDesc("editing", new QualifiedType(Boolean.class.getName()));
 
     prepareTemplate(project, "frame-10");
     String dialogId = target.getId().getRawId();
     var params = new DialogCreationParameters.Builder(project, dialogId)
         .viewTechId(IvyConstants.ViewTechnology.JSF)
         .signature(new CallSignature(target.getStartMethod().getName()))
-        .dataClassFields(List.of(entries, edit))
+        .dataClassFields(List.of(entries, edit, editing))
         .toCreationParams();
     var userDialog = local.createProjectUserDialog(params);
 
