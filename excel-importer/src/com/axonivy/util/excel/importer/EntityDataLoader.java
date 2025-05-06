@@ -53,6 +53,9 @@ public class EntityDataLoader {
     Connection con = access.obtainConnection();
     try {
       var dbProduct = con.getMetaData().getClass().getName();
+      if (dbProduct.contains("microsoft")) {
+        con.createStatement().execute("SET IDENTITY_INSERT " + tableNameOf(entity) + " ON");
+      }
 
       con.setAutoCommit(false);
       var stmt = loadRows(entity, rows, con);
@@ -63,6 +66,9 @@ public class EntityDataLoader {
         String moveAutoIncrement = "ALTER SEQUENCE " + tableNameOf(entity) + "_id_seq RESTART "
             + "WITH " + (inserted.length + 1) + ";";
         con.createStatement().executeUpdate(moveAutoIncrement);
+      }
+      if (dbProduct.contains("microsoft")) {
+        con.createStatement().execute("SET IDENTITY_INSERT " + tableNameOf(entity) + " OFF");
       }
     } finally {
       access.releaseConnection(con);
