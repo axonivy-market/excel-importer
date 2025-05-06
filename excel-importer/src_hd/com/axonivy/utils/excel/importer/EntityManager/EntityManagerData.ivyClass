@@ -1,6 +1,0 @@
-EntityManagerData #class
-com.axonivy.utils.excel.importer.EntityManager #namespace
-entries java.util.List<com.axonivy.utils.excel.importer.MyEntity> #field
-entries PERSISTENT #fieldModifier
-edit com.axonivy.utils.excel.importer.MyEntity #field
-edit PERSISTENT #fieldModifier

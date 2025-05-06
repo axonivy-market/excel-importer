@@ -1,6 +1,0 @@
-customerManagerData #class
-com.axonivy.utils.excel.test.customerManager #namespace
-entries java.util.List<com.axonivy.utils.excel.test.customer> #field
-entries PERSISTENT #fieldModifier
-edit com.axonivy.utils.excel.test.customer #field
-edit PERSISTENT #fieldModifier
