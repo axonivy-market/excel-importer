@@ -51,11 +51,19 @@ public class EntityDataLoader {
     EntityManager em = manager.createEntityManager();
     JdbcConnectionAccess access = em.unwrap(SessionImpl.class).getJdbcConnectionAccess();
     Connection con = access.obtainConnection();
-    con.setAutoCommit(false);
     try {
+      var dbProduct = con.getMetaData().getClass().getName();
+
+      con.setAutoCommit(false);
       var stmt = loadRows(entity, rows, con);
-      stmt.executeBatch();
+      var inserted = stmt.executeBatch();
       con.commit();
+
+      if (dbProduct.contains("postgres")) {
+        String moveAutoIncrement = "ALTER SEQUENCE " + tableNameOf(entity) + "_id_seq RESTART "
+            + "WITH " + (inserted.length + 1) + ";";
+        con.createStatement().executeUpdate(moveAutoIncrement);
+      }
     } finally {
       access.releaseConnection(con);
       em.close();
@@ -63,21 +71,21 @@ public class EntityDataLoader {
   }
 
   private PreparedStatement loadRows(IEntityClass entity, Iterator<Row> rows, Connection con) throws SQLException {
-    AtomicInteger rCount = new AtomicInteger();
+    AtomicInteger rCount = new AtomicInteger(0);
     List<? extends IEntityClassField> fields = entity.getFields();
     var query = buildInsertQuery(entity, fields);
-    LOGGER.info("Prepared insert query: "+query);
+    LOGGER.info("Prepared insert query: " + query);
     var stmt = con.prepareStatement(query, Statement.NO_GENERATED_KEYS);
     rows.forEachRemaining(row -> {
       try {
-      rCount.incrementAndGet();
+        rCount.incrementAndGet();
         insertCallValuesAsParameter(fields, rCount, row, stmt);
         stmt.addBatch();
       } catch (SQLException ex) {
         throw new RuntimeException(ex);
       }
     });
-    LOGGER.info("Generated "+rCount+" inserts");
+    LOGGER.info("Generated " + rCount + " inserts");
     return stmt;
   }
 
@@ -86,10 +94,10 @@ public class EntityDataLoader {
     int c = 0;
     for (var field : fields) {
       Object value;
-      if (field.getName().equals("id")) {
+      if ("id".equals(field.getName())) {
         value = rCount.intValue();
       } else {
-        Cell cell = row.getCell(c - 1); // id field is not exists in excel file
+        Cell cell = row.getCell(c - 1); // id field does not exists in excel file
         value = getValue(cell);
       }
       c++;
@@ -99,17 +107,22 @@ public class EntityDataLoader {
 
   private static String buildInsertQuery(IEntityClass entity, List<? extends IEntityClassField> fields) {
     String colNames = fields.stream().map(IEntityClassField::getName)
-      .collect(Collectors.joining(","));
+        .collect(Collectors.joining(","));
+    String tableName = tableNameOf(entity);
+    var query = new StringBuilder("INSERT INTO " + tableName + " (" + colNames + ")\nVALUES (");
+    var params = fields.stream().map(IEntityClassField::getName)
+        .map(f -> "?").collect(Collectors.joining(", "));
+    query.append(params);
+    query.append(")");
+    return query.toString();
+  }
+
+  private static String tableNameOf(IEntityClass entity) {
     String tableName = entity.getDatabaseTableName();
     if (StringUtils.isBlank(tableName)) {
       tableName = entity.getSimpleName();
     }
-    var query = new StringBuilder("INSERT INTO "+tableName+" ("+colNames+")\nVALUES (");
-    var params = fields.stream().map(IEntityClassField::getName)
-      .map(f -> "?").collect(Collectors.joining(", "));
-    query.append(params);
-    query.append(")");
-    return query.toString();
+    return tableName;
   }
 
   public Class<?> createTable(IEntityClass entity) {
@@ -121,7 +134,7 @@ public class EntityDataLoader {
       ivy.build(null);
       entityClass = java.getClassLoader().loadClass(entity.getName());
     } catch (Exception ex) {
-      throw new RuntimeException("Failed to load entity class "+entity, ex);
+      throw new RuntimeException("Failed to load entity class " + entity, ex);
     }
     manager.findAll(entityClass); // creates the schema through 'hibernate.hbm2ddl.auto=create'
     return entityClass;
