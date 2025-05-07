@@ -5,11 +5,11 @@
   "isBusinessCaseData" : false,
   "fields" : [ {
     "name" : "entries",
-    "type" : "java.util.List<com.axonivy.util.excel.importer.MyEntity>",
+    "type" : "java.util.List<com.axonivy.utils.excel.importer.MyEntity>",
     "modifiers" : [ "PERSISTENT" ]
   }, {
     "name" : "edit",
-    "type" : "com.axonivy.util.excel.importer.MyEntity",
+    "type" : "com.axonivy.utils.excel.importer.MyEntity",
     "modifiers" : [ "PERSISTENT" ]
   } ]
 }

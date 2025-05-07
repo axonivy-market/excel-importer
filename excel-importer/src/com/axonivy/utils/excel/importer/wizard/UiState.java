@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import com.axonivy.util.excel.importer.wizard.swt.SwtComboModelBinder;
-import com.axonivy.util.excel.importer.wizard.swt.UiComboModel;
+import com.axonivy.utils.excel.importer.wizard.swt.SwtComboModelBinder;
+import com.axonivy.utils.excel.importer.wizard.swt.UiComboModel;
 
 import ch.ivyteam.ui.model.UiModelListener;
 import ch.ivyteam.ui.model.UiTextModel;

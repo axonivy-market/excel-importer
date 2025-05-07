@@ -1,4 +1,4 @@
-package com.axonivy.util.excel.importer.wizard.swt;
+package com.axonivy.utils.excel.importer.wizard.swt;
 
 import java.util.List;
 
