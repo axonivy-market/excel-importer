@@ -1,5 +1,5 @@
 {
-  "format" : "10.0.0",
+  "$schema" : "https://json-schema.axonivy.com/process/12.0.0/process.json",
   "id" : "18B4D3FDEC970DD1",
   "kind" : "HTML_DIALOG",
   "config" : {
@@ -10,13 +10,15 @@
       "type" : "HtmlDialogStart",
       "name" : "start()",
       "config" : {
-        "callSignature" : "start",
+        "signature" : "start",
         "guid" : "18B4D3FDECD3F15A"
       },
       "visual" : {
         "at" : { "x" : 96, "y" : 64 }
       },
-      "connect" : { "id" : "f7", "to" : "f6" }
+      "connect" : [
+        { "id" : "f7", "to" : "f6" }
+      ]
     }, {
       "id" : "f1",
       "type" : "HtmlDialogEnd",
@@ -33,7 +35,9 @@
       "visual" : {
         "at" : { "x" : 96, "y" : 160 }
       },
-      "connect" : { "id" : "f5", "to" : "f4" }
+      "connect" : [
+        { "id" : "f5", "to" : "f4" }
+      ]
     }, {
       "id" : "f4",
       "type" : "HtmlDialogExit",
@@ -58,17 +62,20 @@
       "visual" : {
         "at" : { "x" : 224, "y" : 64 }
       },
-      "connect" : { "id" : "f2", "to" : "f1" }
+      "connect" : [
+        { "id" : "f2", "to" : "f1" }
+      ]
     }, {
       "id" : "f8",
       "type" : "HtmlDialogMethodStart",
       "name" : "delete(MyEntity)",
       "config" : {
-        "callSignature" : "delete",
+        "signature" : "delete",
         "input" : {
           "params" : [
-            { "name" : "entity", "type" : "com.axonivy.utils.excel.importer.MyEntity" }
+            { "name" : "entity", "type" : "com.axonivy.utils.excel.importer.MyEntity", "desc" : "" }
           ],
+          "map" : { },
           "code" : [
             "import com.axonivy.utils.excel.importer.MyEntity;",
             "",
@@ -81,7 +88,9 @@
       "visual" : {
         "at" : { "x" : 96, "y" : 224 }
       },
-      "connect" : { "id" : "f10", "to" : "f9" }
+      "connect" : [
+        { "id" : "f10", "to" : "f9" }
+      ]
     }, {
       "id" : "f9",
       "type" : "HtmlDialogEnd",
@@ -93,10 +102,10 @@
       "type" : "HtmlDialogMethodStart",
       "name" : "edit(MyEntity)",
       "config" : {
-        "callSignature" : "edit",
+        "signature" : "edit",
         "input" : {
           "params" : [
-            { "name" : "entity", "type" : "com.axonivy.utils.excel.importer.MyEntity" }
+            { "name" : "entity", "type" : "com.axonivy.utils.excel.importer.MyEntity", "desc" : "" }
           ],
           "map" : {
             "out.edit" : "param.entity"
@@ -107,7 +116,9 @@
       "visual" : {
         "at" : { "x" : 96, "y" : 288 }
       },
-      "connect" : { "id" : "f13", "to" : "f12" }
+      "connect" : [
+        { "id" : "f13", "to" : "f12" }
+      ]
     }, {
       "id" : "f12",
       "type" : "HtmlDialogEnd",
@@ -133,7 +144,9 @@
       "visual" : {
         "at" : { "x" : 96, "y" : 352 }
       },
-      "connect" : { "id" : "f16", "to" : "f15" }
+      "connect" : [
+        { "id" : "f16", "to" : "f15" }
+      ]
     }, {
       "id" : "f15",
       "type" : "HtmlDialogEnd",
@@ -156,7 +169,9 @@
       "visual" : {
         "at" : { "x" : 96, "y" : 416 }
       },
-      "connect" : { "id" : "f19", "to" : "f18" }
+      "connect" : [
+        { "id" : "f19", "to" : "f18" }
+      ]
     }, {
       "id" : "f18",
       "type" : "HtmlDialogEnd",

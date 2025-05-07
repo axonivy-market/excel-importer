@@ -3,20 +3,21 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.axonivy.utils.excel</groupId>
   <artifactId>excel-importer</artifactId>
-  <version>10.0.15-SNAPSHOT</version>
-   <packaging>eclipse-plugin</packaging>
+  <version>12.0.3-SNAPSHOT</version>
+  <packaging>eclipse-plugin</packaging>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <java.compiler.compliance>17</java.compiler.compliance>
-    <tycho.version>3.0.4</tycho.version>
+    <java.compiler.compliance>21</java.compiler.compliance>
+    <tycho.version>4.0.10</tycho.version>
+    <ivy.release>12.0</ivy.release>
   </properties>
 
   <repositories>
     <repository>
-      <id>ivy.nightly.release</id>
+      <id>ivy.lts.release</id>
       <layout>p2</layout>
-      <url>https://p2.axonivy.com/p2/10.0/</url>
+      <url>https://p2.axonivy.com/p2/${ivy.release}/</url>
     </repository>
   </repositories>
 

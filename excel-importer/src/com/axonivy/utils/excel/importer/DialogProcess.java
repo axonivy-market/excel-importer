@@ -8,17 +8,18 @@ import ch.ivyteam.ivy.process.model.diagram.shape.DiagramShape;
 import ch.ivyteam.ivy.process.model.diagram.value.Position;
 import ch.ivyteam.ivy.process.model.diagram.value.PositionDelta;
 import ch.ivyteam.ivy.process.model.element.activity.Script;
+import ch.ivyteam.ivy.process.model.element.event.end.dialog.html.HtmlDialogEnd;
 import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogEventStart;
 import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogMethodStart;
 import ch.ivyteam.ivy.process.model.element.event.start.dialog.html.HtmlDialogStart;
 import ch.ivyteam.ivy.process.model.element.event.start.value.CallSignature;
+import ch.ivyteam.ivy.process.model.element.value.Mapping;
 import ch.ivyteam.ivy.process.model.element.value.Mappings;
 import ch.ivyteam.ivy.process.model.value.MappingCode;
 import ch.ivyteam.ivy.process.model.value.scripting.QualifiedType;
 import ch.ivyteam.ivy.process.model.value.scripting.VariableDesc;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 
-@SuppressWarnings("restriction")
 public class DialogProcess {
 
   private final Process process;
@@ -40,6 +41,7 @@ public class DialogProcess {
     addEditAction();
     addCreateAction();
     addSaveAction();
+    addCancelAction();
   }
 
   private void addDbLoaderScript() {
@@ -51,8 +53,8 @@ public class DialogProcess {
     Script loader = process.add().element(Script.class);
     loader.setName("load db");
     loader.setCode("""
-            out.entries = ivy.persistence.%s.findAll(%s.class);
-            """.formatted(unit, entity.getName()));
+      out.entries = ivy.persistence.%s.findAll(%s.class);
+      """.formatted(unit, entity.getName()));
 
     DiagramShape scriptShape = loader.getShape();
     scriptShape.moveTo(start.getShape().getBounds().getCenter().shiftX(150));
@@ -74,11 +76,11 @@ public class DialogProcess {
       out.entries.remove(param.entity);
       """;
     var code = template
-            .replaceAll("NAME", entity.getName())
-            .replaceAll("SHORT", entity.getSimpleName())
-            .replaceAll("UNIT", unit);
+        .replaceAll("NAME", entity.getName())
+        .replaceAll("SHORT", entity.getSimpleName())
+        .replaceAll("UNIT", unit);
 
-    delete.setOutput(new MappingCode(code));
+    delete.setParameterMappings(new MappingCode(code));
   }
 
   private void addEditAction() {
@@ -87,30 +89,49 @@ public class DialogProcess {
     var param = new VariableDesc("entity", new QualifiedType(entity.getName()));
     edit.setSignature(new CallSignature("edit").setInputParameters(List.of(param)));
 
-    edit.setOutput(new MappingCode(Mappings.single("out.edit", "param.entity")));
+    edit.setParameterMappings(new MappingCode(new Mappings(
+        new Mapping("out.edit", "param.entity"),
+        new Mapping("out.editing", "true"))));
   }
 
   private void addCreateAction() {
     var add = addEvent();
     add.setName("add");
-    add.setOutput(new MappingCode(Mappings.single("out.edit", "new "+entity.getName()+"()")));
+    add.setOutput(new MappingCode(new Mappings(
+        new Mapping("out.edit", "new " + entity.getName() + "()")),
+        "in.editing = false;"));
   }
 
   private void addSaveAction() {
     var save = addEvent();
     save.setName("save");
     String doSave = """
-      if (!out.edit.#id is initialized) {
-        out.edit = ivy.persistence.UNIT.persist(out.edit) as ENTITY;
-        out.entries.add(out.edit);
+      ivy.log.debug("edit="+in.editing+ " /what="+in.edit);
+      if (in.editing) {
+        ivy.persistence.UNIT.merge(in.edit);
       } else {
-        ivy.persistence.UNIT.merge(out.edit);
+        in.edit = ivy.persistence.UNIT.persist(in.edit) as ENTITY;
+        in.entries.add(in.edit);
       }
-      out.edit = null;
+      in.edit = null;
       """
         .replaceAll("UNIT", unit)
         .replaceAll("ENTITY", entity.getName());
     save.setOutput(new MappingCode(doSave));
+  }
+
+  private void addCancelAction() {
+    var cancel = addEvent();
+    cancel.setName("cancel");
+    var doCancel = """
+      ivy.log.debug("canceling edit="+in.editing+ " /what="+in.edit);
+      if (in.editing) {
+        ivy.persistence.UNIT.refresh(in.edit);
+      }
+      in.edit = null;
+      """
+        .replaceAll("UNIT", unit);
+    cancel.setOutput(new MappingCode(doCancel));
   }
 
   private HtmlDialogMethodStart addMethod() {
@@ -121,10 +142,19 @@ public class DialogProcess {
     return addAction(HtmlDialogEventStart.class);
   }
 
+  private HtmlDialogEnd addEndFor(NodeElement other) {
+    HtmlDialogEnd end = process.add().element(HtmlDialogEnd.class);
+    Position center = other.getShape().getBounds().getCenter();
+    end.getShape().moveTo(center.shiftX(100));
+    other.getShape().edges().connectTo(end.getShape());
+    return end;
+  }
+
   private <T extends NodeElement> T addAction(Class<T> type) {
     var action = process.add().element(type);
     action.getShape().moveTo(new Position(x, y));
     y += 80;
+    addEndFor(action);
     return action;
   }
 

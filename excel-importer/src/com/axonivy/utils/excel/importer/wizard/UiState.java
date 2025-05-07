@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import ch.ivyteam.ui.model.UiComboModel;
+import com.axonivy.util.excel.importer.wizard.swt.SwtComboModelBinder;
+import com.axonivy.util.excel.importer.wizard.swt.UiComboModel;
+
 import ch.ivyteam.ui.model.UiModelListener;
 import ch.ivyteam.ui.model.UiTextModel;
 import ch.ivyteam.ui.model.event.ValueChangeEvent;
@@ -28,10 +30,10 @@ public class UiState {
 
   public void bind(ExcelUi ui) {
     var binder = new SwtBinder();
-    binder.bind(file).to(ui.importFile);
+    new SwtComboModelBinder<>(file).to(ui.importFile);
     binder.bind(entity).to(ui.entity);
-    binder.bind(project).to(ui.targetProject);
-    binder.bind(persistence).to(ui.persistence);
+    new SwtComboModelBinder<>(project).to(ui.targetProject);
+    new SwtComboModelBinder<>(persistence).to(ui.persistence);
   }
 
   public void watch(Consumer<String> listener) {

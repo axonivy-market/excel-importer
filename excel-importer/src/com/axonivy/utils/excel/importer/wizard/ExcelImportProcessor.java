@@ -31,7 +31,7 @@ import ch.ivyteam.ivy.application.IProcessModelVersion;
 import ch.ivyteam.ivy.designer.ui.wizard.restricted.IWizardSupport;
 import ch.ivyteam.ivy.designer.ui.wizard.restricted.WizardStatus;
 import ch.ivyteam.ivy.eclipse.util.EclipseUiUtil;
-import ch.ivyteam.ivy.process.data.persistence.IPersistenceContext;
+import ch.ivyteam.ivy.process.data.persistence.PersistenceContextFactory;
 import ch.ivyteam.ivy.process.data.persistence.datamodel.IProcessDataPersistenceConfigManager;
 import ch.ivyteam.ivy.process.data.persistence.model.Persistence.PersistenceUnit;
 import ch.ivyteam.ivy.project.IIvyProject;
@@ -108,51 +108,46 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
 
   private void importExcel(IProjectDataClassManager manager, FileResource excel, IProgressMonitor monitor) throws Exception {
     Workbook wb = null;
-    try(InputStream is = excel.read().inputStream()) {
+    try (InputStream is = excel.read().inputStream()) {
       wb = ExcelLoader.load(excel.name(), excel.read().inputStream());
     }
     Sheet sheet = wb.getSheetAt(0);
 
     var newEntity = new EntityClassReader(manager).toEntity(sheet, entityName);
     newEntity.save();
-    SwtRunnable.execNowOrAsync(()->
-      EclipseUiUtil.openEditor(newEntity)
-    );
-    monitor.setTaskName("Created EntityClass "+entityName);
+    SwtRunnable.execNowOrAsync(() -> EclipseUiUtil.openEditor(newEntity));
+    monitor.setTaskName("Created EntityClass " + entityName);
 
     IProcessModelVersion pmv = manager.getProcessModelVersion();
     int loaded = 0;
     try {
       var entries = importData(sheet, newEntity, pmv);
-      loaded =  entries.size();
+      loaded = entries.size();
     } catch (Exception ex) {
       LOGGER.error("Excel data import failed", ex);
       status = EclipseUtil.createErrorStatus("Loading of Excel data failed", ex);
     }
-    monitor.setTaskName("Loaded Excel rows into Database "+loaded);
+    monitor.setTaskName("Loaded Excel rows into Database " + loaded);
 
     new DialogCreator().createDialog(newEntity, selectedPersistence);
 
     ProcessDrawer drawer = new ProcessDrawer(manager.getProject());
     var process = drawer.drawManager(newEntity);
-    SwtRunnable.execNowOrAsync(()->
-      EclipseUiUtil.openEditor(process)
-    );
+    SwtRunnable.execNowOrAsync(() -> EclipseUiUtil.openEditor(process));
   }
 
   private List<?> importData(Sheet sheet, IEntityClass newEntity, IProcessModelVersion pmv) throws Exception {
-    var persist = pmv.getAdapter(IPersistenceContext.class);
+    var persist = PersistenceContextFactory.of(pmv);
     var ivyEntities = persist.get(selectedPersistence);
     EntityDataLoader loader = new EntityDataLoader(ivyEntities);
 
     var system = pmv.getApplication().getSecurityContext().sessions().systemUser();
-    var request =  RequestFactory.createRestRequest(pmv, system);
-    List<?> loaded = new RequestContext(request).callInContext(() -> {
+    var request = RequestFactory.createRestRequest(pmv, system);
+    return new RequestContext(request).callInContext(() -> {
       var entityType = loader.createTable(newEntity);
       loader.load(sheet, newEntity);
       return ivyEntities.findAll(entityType);
     });
-    return loaded;
   }
 
   String getSelectedSourceProjectName() {
@@ -172,7 +167,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
       try {
         importFile = NioFileSystemProvider.create(Path.of("/")).root().file(text);
       } catch (Exception ex) {
-        return WizardStatus.createErrorStatus("Can't create file from "+text, ex);
+        return WizardStatus.createErrorStatus("Can't create file from " + text, ex);
       }
     } else {
       importFile = null;
@@ -225,7 +220,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
 
   public WizardStatus validateImportFileExits() {
     if (importFile == null || !importFile.exists()) {
-      return WizardStatus.createErrorStatus("Import file "+importFile+" does not exist");
+      return WizardStatus.createErrorStatus("Import file " + importFile + " does not exist");
     }
     return WizardStatus.createOkStatus();
   }
@@ -250,10 +245,10 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
     }
     var main = IProcessDataPersistenceConfigManager.instance();
     var local = main.getProjectDataModelFor(selectedSourceProject.getProject());
-    return local.getDataModels(ProjectRelationSearchScope.CURRENT_AND_ALL_REQUIRED_PROJECTS, null)
-      .getModels().stream()
-      .flatMap(c -> c.getPersistenceUnitConfigs().stream())
-      .map(PersistenceUnit::getName)
-      .toList();
+    return local.getDataModels(ProjectRelationSearchScope.CURRENT_AND_ALL_REQUIRED_PROJECTS)
+        .getModels().stream()
+        .flatMap(c -> c.getPersistenceUnitConfigs().stream())
+        .map(PersistenceUnit::getName)
+        .toList();
   }
 }

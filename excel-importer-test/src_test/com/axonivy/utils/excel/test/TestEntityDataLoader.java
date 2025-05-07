@@ -39,7 +39,7 @@ public class TestEntityDataLoader {
 
     IEntityClass customer = reader.toEntity(customerSheet, "customer");
     try {
-      customer.save(new NullProgressMonitor());
+      customer.save();
       Class<?> entity = loader.createTable(customer);
       assertThat(unit.findAll(entity)).isEmpty();
       loader.load(customerSheet, customer);
@@ -60,7 +60,7 @@ public class TestEntityDataLoader {
 
     IEntityClass meds = reader.toEntity(medSheet, "meds");
     try {
-      meds.save(new NullProgressMonitor());
+      meds.save();
       Class<?> entity = loader.createTable(meds);
       assertThat(unit.findAll(entity)).isEmpty();
       loader.load(medSheet, meds);
