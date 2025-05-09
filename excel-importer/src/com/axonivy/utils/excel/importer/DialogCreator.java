@@ -104,7 +104,7 @@ public class DialogCreator {
   }
 
   private static String readTemplate(String resource) {
-    try (InputStream is = DialogCreator.class.getResourceAsStream("/com/axonivy/util/excel/importer/EntityManager/" + resource)) {
+    try (InputStream is = DialogCreator.class.getResourceAsStream("/com/axonivy/utils/excel/importer/EntityManager/" + resource)) {
       var bos = new ByteArrayOutputStream();
       is.transferTo(bos);
       return new String(bos.toByteArray());
