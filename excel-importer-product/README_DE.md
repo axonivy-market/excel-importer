@@ -27,7 +27,7 @@ einem Projekt UI, #wo ist es nicht nur gezeigt aber auch gemacht #editierbar.
 5. Ferner, das Zwiegespräch erlaubt du zu modifizieren, streich und füg zu neue
    Einträge. ![Endgültig-Zwiegespräch](doc/entity-detail-view.png)
 
-## Einrichtung
+## Setup
 
 In dem Projekt, #wo dem #Exzellieren #Daten sollte sein fertiggebracht:
 
