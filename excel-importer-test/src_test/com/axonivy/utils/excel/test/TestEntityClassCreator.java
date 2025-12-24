@@ -71,7 +71,7 @@ public class TestEntityClassCreator {
     assertThat(field.getAnnotations())
         .extracting(DataClassAnnotation::fullAnnotation)
         .as("postgres ID generator in sequence; with drawback of slow batch-mode")
-        .contains("@javax.persistence.GeneratedValue(strategy=javax.persistence.GenerationType.IDENTITY)");
+        .contains("@jakarta.persistence.GeneratedValue(strategy=javax.persistence.GenerationType.IDENTITY)");
   }
 
   @BeforeEach
