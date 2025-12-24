@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.axonivy.ivy.api</groupId>
     <artifactId>ivy-project-parent</artifactId>
-    <version>13.2.1-SNAPSHOT</version>
+    <version>13.2.0</version>
     <relativePath></relativePath>
   </parent>
   <groupId>com.axonivy.utils.excel</groupId>
@@ -13,7 +13,7 @@
   <version>13.2.0-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
   <properties>
-    <ivy.release>13.1</ivy.release>
+    <ivy.release>13.2</ivy.release>
     <java.compiler.compliance>21</java.compiler.compliance>
     <tycho.version>4.0.10</tycho.version>
   </properties>
