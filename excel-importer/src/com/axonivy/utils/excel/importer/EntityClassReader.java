@@ -15,7 +15,7 @@ import ch.ivyteam.ivy.scripting.dataclass.IDataClassManager;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClassField;
 import ch.ivyteam.ivy.scripting.dataclass.IProjectDataClassManager;
-import ch.ivyteam.ivy.scripting.streamInOut.DataClassAnnotation;
+import ch.ivyteam.ivy.scripting.dataclass.model.DataClassAnnotation;
 
 public class EntityClassReader {
 

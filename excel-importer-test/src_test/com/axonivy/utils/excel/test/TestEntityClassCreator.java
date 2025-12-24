@@ -17,7 +17,7 @@ import com.axonivy.utils.excel.importer.ExcelLoader;
 
 import ch.ivyteam.ivy.environment.IvyTest;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClassField;
-import ch.ivyteam.ivy.scripting.streamInOut.DataClassAnnotation;
+import ch.ivyteam.ivy.scripting.dataclass.model.DataClassAnnotation;
 
 @IvyTest
 public class TestEntityClassCreator {
@@ -71,7 +71,7 @@ public class TestEntityClassCreator {
     assertThat(field.getAnnotations())
         .extracting(DataClassAnnotation::fullAnnotation)
         .as("postgres ID generator in sequence; with drawback of slow batch-mode")
-        .contains("@jakarta.persistence.GeneratedValue(strategy=javax.persistence.GenerationType.IDENTITY)");
+        .contains("@jakarta.persistence.GeneratedValue(strategy=jakarta.persistence.GenerationType.IDENTITY)");
   }
 
   @BeforeEach
