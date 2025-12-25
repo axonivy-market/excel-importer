@@ -3,8 +3,11 @@
 <target name="ivy">
 	<locations>
 		<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-			<repository location="https://p2.axonivy.com/p2/13.1/"/>
-			<unit id="ch.ivyteam.ivy.designer.product" version="13.1.1"/>
+			<repository location="https://p2.axonivy.com/p2/13.2/"/>
+			<unit id="ch.ivyteam.ivy.designer.product" version="13.2.0"/>
+			<unit id="ch.ivyteam.ivy.designer.rule.engine.feature.feature.group" version="13.2.0.202512212232"/>
+			<unit id="ch.ivyteam.ivy.designer.webeditor.feature.feature.group" version="13.2.0.202512220839"/>
+			<unit id="ch.ivyteam.ivy.searchengine.feature.feature.group" version="13.2.0.202512221358"/>
 		</location>
 	</locations>
 </target>
