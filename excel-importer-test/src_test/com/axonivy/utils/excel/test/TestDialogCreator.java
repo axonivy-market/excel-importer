@@ -33,7 +33,6 @@ import ch.ivyteam.ivy.scripting.dataclass.IDataClassField;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 
 @IvyTest
-@SuppressWarnings("restriction")
 public class TestDialogCreator {
 
   private EntityClassReader reader;

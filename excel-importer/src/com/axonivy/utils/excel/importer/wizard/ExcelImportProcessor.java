@@ -38,10 +38,10 @@ import ch.ivyteam.ivy.project.IIvyProject;
 import ch.ivyteam.ivy.project.IIvyProjectManager;
 import ch.ivyteam.ivy.request.RequestFactory;
 import ch.ivyteam.ivy.request.impl.RequestContext;
+import ch.ivyteam.ivy.resource.datamodel.ProjectRelationSearchScope;
 import ch.ivyteam.ivy.scripting.dataclass.IDataClassManager;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 import ch.ivyteam.ivy.scripting.dataclass.IProjectDataClassManager;
-import ch.ivyteam.ivy.search.restricted.ProjectRelationSearchScope;
 import ch.ivyteam.log.Logger;
 import ch.ivyteam.util.io.resource.FileResource;
 import ch.ivyteam.util.io.resource.nio.NioFileSystemProvider;
@@ -131,7 +131,7 @@ public class ExcelImportProcessor implements IWizardSupport, IRunnableWithProgre
 
     new DialogCreator().createDialog(newEntity, selectedPersistence);
 
-    ProcessDrawer drawer = new ProcessDrawer(manager.getProject());
+    ProcessDrawer drawer = new ProcessDrawer(manager.project());
     var process = drawer.drawManager(newEntity);
     SwtRunnable.execNowOrAsync(() -> EclipseUiUtil.openEditor(process));
   }

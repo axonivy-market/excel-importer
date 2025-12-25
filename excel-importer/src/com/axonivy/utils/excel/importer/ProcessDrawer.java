@@ -1,7 +1,5 @@
 package com.axonivy.utils.excel.importer;
 
-import org.eclipse.core.resources.IProject;
-
 import ch.ivyteam.ivy.process.model.Process;
 import ch.ivyteam.ivy.process.model.diagram.Diagram;
 import ch.ivyteam.ivy.process.model.element.activity.DialogCall;
@@ -10,13 +8,14 @@ import ch.ivyteam.ivy.process.model.element.event.start.RequestStart;
 import ch.ivyteam.ivy.process.model.element.event.start.value.CallSignature;
 import ch.ivyteam.ivy.process.rdm.IProcess;
 import ch.ivyteam.ivy.process.rdm.resource.ProcessCreator;
+import ch.ivyteam.ivy.project.model.Project;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 
 public class ProcessDrawer {
 
-  private final IProject project;
+  private final Project project;
 
-  public ProcessDrawer(IProject project) {
+  public ProcessDrawer(Project project) {
     this.project = project;
   }
 
