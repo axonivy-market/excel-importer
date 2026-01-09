@@ -9,11 +9,11 @@
   <modules>
     <module>excel-importer</module>
     <module>excel-importer-test</module>
-    <module>${project.name}-product</module>
+    <module>excel-importer-product</module>
   </modules>
 
   <scm>
-    <developerConnection>scm:git:https://github.com/axonivy-market/${project.name}.git</developerConnection>
+    <developerConnection>scm:git:https://github.com/axonivy-market/excel-importer.git</developerConnection>
     <tag>v10.0.14</tag>
   </scm>
   
