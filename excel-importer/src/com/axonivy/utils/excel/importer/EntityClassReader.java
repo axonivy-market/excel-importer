@@ -2,8 +2,8 @@ package com.axonivy.utils.excel.importer;
 
 import java.nio.file.Path;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -15,7 +15,7 @@ import ch.ivyteam.ivy.scripting.dataclass.IDataClassManager;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClass;
 import ch.ivyteam.ivy.scripting.dataclass.IEntityClassField;
 import ch.ivyteam.ivy.scripting.dataclass.IProjectDataClassManager;
-import ch.ivyteam.ivy.scripting.streamInOut.DataClassAnnotation;
+import ch.ivyteam.ivy.scripting.dataclass.model.DataClassAnnotation;
 
 public class EntityClassReader {
 

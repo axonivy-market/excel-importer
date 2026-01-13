@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.axonivy.ivy.api</groupId>
     <artifactId>ivy-project-parent</artifactId>
-    <version>13.1.1</version>
-    <relativePath />
+    <version>13.2.0</version>
+    <relativePath></relativePath>
   </parent>
   <groupId>com.axonivy.utils.excel</groupId>
   <artifactId>excel-importer</artifactId>
-  <version>13.1.2-SNAPSHOT</version>
+  <version>13.2.0-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
   <properties>
-    <ivy.release>13.1</ivy.release>
+    <ivy.release>13.2</ivy.release>
     <java.compiler.compliance>21</java.compiler.compliance>
     <tycho.version>4.0.10</tycho.version>
   </properties>

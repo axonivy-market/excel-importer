@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: excel-importer
 Bundle-SymbolicName: excel-importer;singleton:=true
-Bundle-Version: 13.1.2.qualifier
+Bundle-Version: 13.2.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Automatic-Module-Name: excel.importer
 Export-Package: com.axonivy.utils.excel.importer
@@ -17,10 +17,8 @@ Require-Bundle: ch.ivyteam.ivy.scripting.dataclass,
  ch.ivyteam.ivy.designer.ide;resolution:=optional,
  ch.ivyteam.lib.poi,
  ch.ivyteam.lib.apache.commons.lang3,
- javax.persistence,
  ch.ivyteam.ivy.dialog.config,
  ch.ivyteam.ivy.dialog.jsf.ui,
- ch.ivyteam.lib.hibernate.entitymanager,
  ch.ivyteam.ivy.process.rdm,
  ch.ivyteam.ivy.dialog.view
 Bundle-ActivationPolicy: lazy
