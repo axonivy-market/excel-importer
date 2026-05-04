@@ -5,6 +5,14 @@ The imported table is added as an entity to a project UI, where it is not only d
 
 ![final-dialog](doc/entity-table.png)
 
+### Key features
+
+- Import Excel spreadsheets and turn rows into editable entities in your Axon Ivy app.
+- Automatically generates entity classes and a ready-to-use dialog UI.
+- One-click wizard: choose a project and import — the importer creates the entity, process, and dialog for you.
+- Built-in UI to view, add, edit, and delete records created from Excel.
+- Keeps your database schema in sync with automatic schema updates.
+- Compatible with common databases: MariaDB, PostgreSQL, MySQL, and MSSQL.
 
 ## Demo
 
@@ -42,3 +50,10 @@ This connector has been successfully tested with the following DBMS:
 - **MSSQL** (Microsoft SQL Server 2022)
 
 You may try it with other products and file us an [issue](https://github.com/axonivy-market/excel-importer/issues) if something doesn't work.
+
+## Components
+
+- Dialogs & processes (main module: `excel-importer`):
+  - `EntityManager.xhtml` — UI to browse and manage imported entities.
+  - `EntityDetail.xhtml` — Dialog for viewing and editing a single entity.
+  - `EntityManagerProcess.p.json` — Dialog process exposing: `start()`, `delete(MyEntity)`, `edit(MyEntity)`, `save`, `add`.
