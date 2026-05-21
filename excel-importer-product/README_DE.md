@@ -1,15 +1,78 @@
-# Excel Importer
+ # Excel Importer
 
-Dieses Tool unterstützt dich beim Importieren von MS Excel-Tabellen in dein Axon Ivy-Projekt.
-Die importierte Tabelle wird als Entität zu einer Projektoberfläche hinzugefügt, wo sie nicht nur dargestellt wird, sondern auch editierbar ist.
+Der Excel Importer integriert sich in Axon Ivy, um Excel-Tabellen in deine Prozesse zu importieren, Zeilen auf Java-Entitäten abzubilden und sie in der Datenbank deiner Anwendung zu persistieren.
 
-![final-dialog](doc/entity-table.png)
+Er bietet dataclass-gesteuerte Zuordnungen und eine einfache Benutzeroberfläche zur Verwaltung von Entitätsdaten, mit der du importierte Datensätze überprüfen, bearbeiten und persistieren kannst.
 
-### Key features
+![Excel-Symbol](../excel-importer/webContent/icon/excel-icon.png)
 
-- Importieren Sie Excel-Tabellen und verwandeln Sie Zeilen in editierbare Entitäten für Ihre Axon Ivy-Anwendung.
-- Generiert automatisch Entity-Klassen und ein sofort einsatzbereites Dialog-UI.
-- Ein Assistent: Projekt wählen und importieren — erstellt Entity, Prozess und Dialog.
-- Integriertes CRUD-UI zum Anzeigen, Hinzufügen, Bearbeiten und Löschen von Einträgen.
-- Hält das Datenbankschema synchron (automatische Schema-Aktualisierungen).
-- Kompatibel mit gängigen Datenbanken: MariaDB, PostgreSQL, MySQL und MSSQL.
+### Wichtigste Funktionen
+
+- Importiere Excel-Tabellen und bilde Zeilen auf Java-Entitäten ab, sodass du Daten schnell in Axon Ivy-Prozesse laden kannst.
+- Ordne Excel-Spalten persistenten Entitätsfeldern zu und persistiere Daten automatisch in deiner konfigurierten Persistence-Unit.
+- Verwalte importierte Datensätze über eine integrierte Entity-Manager-Oberfläche mit Hinzufügen/Bearbeiten/Löschen-Workflows.
+- Validiere und transformiere Excel-Daten vor der Persistenz, um manuellen Nachbearbeitungsaufwand zu reduzieren.
+- Biete dataclass-gesteuerte Formularkomponenten für eine nahtlose Integration in Dialoge und Prozesse.
+- Enthält leichte HTML-Dialogprozesse für gängige Entitätsoperationen (anzeigen, bearbeiten, löschen).
+
+## Demo
+
+- Für diesen Abschnitt wurden keine Informationen geliefert.
+
+### Demo-Workflows
+
+- Für diesen Abschnitt wurden keine Informationen geliefert.
+
+## Einrichtung
+
+- **Rollen:** Everybody (konfiguriert in config/roles.xml)
+- **OpenAPI:** Keine öffentlichen OpenAPI-Spezifikationen werden von dieser Erweiterung bereitgestellt.
+
+### Variablen
+
+- Es wurden keine Variablen erkannt.
+
+### Optionale Authentifizierungs- und Laufzeitabschnitte
+
+- Für diesen Abschnitt wurden keine Informationen geliefert.
+
+## Komponenten
+
+### Connector-Prozesse
+
+Keine Connector-Prozesse werden von dieser Erweiterung bereitgestellt.
+
+### Formkomponenten
+
+#### MyEntity — Persistente Entitätsdatensätze verwalten
+- **Namespace:** com.axonivy.utils.excel.importer
+- **Komponententyp:** Datenklasse
+- **Felder:**
+   - `id` (Integer) — Identifikator
+   - `name` (String) — Name der Entität
+- **Verwendet in:** EntityManagerProcess.p.json (Methoden: delete, edit)
+- **Zweck:** Verwaltet persistente Entitätsdatensätze, die durch Excel-Importe erstellt wurden.
+
+#### Data — Datenklasse (keine deklarierten Felder)
+- **Namespace:** com.axonivy.utils.excel.importer
+- **Komponententyp:** Datenklasse
+- **Felder:**
+   - (keine)
+- **Zweck:** Platzhalter-Datenklasse, die vom Entity-Manager verwendet wird.
+
+### OpenAPI-Ressourcen
+
+Keine öffentlichen OpenAPI-Spezifikationen werden von dieser Erweiterung bereitgestellt.
+
+### Maven-Artefakte
+
+1. excel-importer
+
+```xml
+<dependency>
+  <groupId>com.axonivy.utils.excel</groupId>
+  <artifactId>@artifact.id@</artifactId>
+  <version>@version@</version>
+  <type>iar</type>
+</dependency>
+```

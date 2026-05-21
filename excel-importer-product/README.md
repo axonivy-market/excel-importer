@@ -1,59 +1,79 @@
-# Excel importer
+ # Excel Importer
 
-This tool supports you in importing MS Excel tables into your Axon Ivy project.
-The imported table is added as an entity to a project UI, where it is not only displayed but also made editable.
+The Excel Importer integrates with Axon Ivy to import Excel spreadsheets into your processes, mapping rows to Java entities and persisting them in your application's database.
 
-![final-dialog](doc/entity-table.png)
+It provides dataclass-driven mappings and a simple entity management UI to review, edit, and persist imported data.
+
+![Excel icon](../excel-importer/webContent/icon/excel-icon.png)
 
 ### Key features
 
-- Import Excel spreadsheets and turn rows into editable entities in your Axon Ivy app.
-- Automatically generates entity classes and a ready-to-use dialog UI.
-- One-click wizard: choose a project and import — the importer creates the entity, process, and dialog for you.
-- Built-in UI to view, add, edit, and delete records created from Excel.
-- Keeps your database schema in sync with automatic schema updates.
-- Compatible with common databases: MariaDB, PostgreSQL, MySQL, and MSSQL.
+- Import Excel spreadsheets and map rows to Java entities, enabling fast data ingestion into Axon Ivy processes.
+- Map Excel columns to persistent entity fields and automatically persist data to your configured persistence unit.
+- Manage imported records through a built-in entity manager UI with add/edit/delete workflows.
+- Validate and transform Excel data before persistence, reducing manual cleanup.
+- Provide dataclass-driven form components for seamless integration into dialogs and processes.
+- Include lightweight HTML dialog processes for common entity operations (view, edit, delete).
 
 ## Demo
 
-1. Initiate the Excel imported via menu `File` > `Import` > `Axon Ivy` > `App Dialog from Excel`.
-![importer](doc/excel-import-entry.png)
+- No information was delivered for this section.
 
-2. Pick a project, where the Excel records should be imported to as Entity with a Dialog.
-![wizard](doc/target-project-unit.png)
+### Demo workflows
 
-3. The importer will create the EntityClass, that represents entries in the Database.
-![generated-entity](doc/generate-entity-from-excel.png)
-
-4. A simple process will be created, leading to a Dialog to explore your imported Entities.
-![final-dialog](doc/entity-table.png)
-
-5. Furthermore, the Dialog allows you to modify, delete and add new entries.
-![final-dialog](doc/entity-detail-view.png)
+- No information was delivered for this section.
 
 ## Setup
 
-In the project, where the Excel data should be managed:
+- **Roles:** Everybody (configured in config/roles.xml)
+- **OpenAPI:** No public OpenAPI specs delivered by this extension.
 
-1. Create a persistence unit under `/config/persistence.xml`
-2. Add the properties
-  - `hibernate.hbm2ddl.auto=update` (to allow schema changes)
-3. Set the Data source to a valid database. If there is none, set it up under `/config/databases.yaml`
+### Variables
 
-## Compatibility
+- No variables were detected.
 
-This connector has been successfully tested with the following DBMS:
+### Optional authentication and runtime sections
 
-- **MariaDB** (MariaDB 11.7.2-MariaDB)
-- **PostgreSQL** (PostgreSQL 17.4)
-- **MySQL** (MySQL Server 9.1.0)
-- **MSSQL** (Microsoft SQL Server 2022)
-
-You may try it with other products and file us an [issue](https://github.com/axonivy-market/excel-importer/issues) if something doesn't work.
+- No information was delivered for this section.
 
 ## Components
 
-- Dialogs & processes (main module: `excel-importer`):
-  - `EntityManager.xhtml` — UI to browse and manage imported entities.
-  - `EntityDetail.xhtml` — Dialog for viewing and editing a single entity.
-  - `EntityManagerProcess.p.json` — Dialog process exposing: `start()`, `delete(MyEntity)`, `edit(MyEntity)`, `save`, `add`.
+### Connector processes
+
+No connector processes delivered by this extension.
+
+### Form components
+
+#### MyEntity — Manage persistent entity records
+- **Namespace:** com.axonivy.utils.excel.importer
+- **Component type:** Data Class
+- **Fields:**
+	- `id` (Integer) — Identifier
+	- `name` (String) — Name of the entity
+- **Where used:** EntityManagerProcess.p.json (methods: delete, edit)
+- **Purpose:** Manage persistent entity records created from Excel imports
+
+#### Data — Data class (no declared fields)
+- **Namespace:** com.axonivy.utils.excel.importer
+- **Component type:** Data Class
+- **Fields:**
+	- (none)
+- **Purpose:** Placeholder data class used by the entity manager
+
+### Open API resources
+
+No public OpenAPI specs delivered by this extension.
+
+### Maven artifacts
+
+1. excel-importer
+
+```xml
+<dependency>
+  <groupId>com.axonivy.utils.excel</groupId>
+  <artifactId>@artifact.id@</artifactId>
+  <version>@version@</version>
+  <type>iar</type>
+</dependency>
+```
+
