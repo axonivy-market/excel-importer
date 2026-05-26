@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://json-schema.axonivy.com/app/12.0.0/databases.json
+# yaml-language-server: $schema=https://json-schema.axonivy.com/14.0-dev/config/databases-1.json
 Databases:
   inMemory:
     Url: jdbc:hsqldb:mem:oblivion
@@ -28,4 +28,3 @@ Databases:
     Password: ${decrypt:a0w9NOgEdtueCDVQYyXcgG1iGyBOG2gjNfZTjGo8MM0=}
     Properties:
       encrypt: 'false'
-    

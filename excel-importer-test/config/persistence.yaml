@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://json-schema.axonivy.com/14.0-dev/config/persistence-2.json
+Persistence:
+  testing:
+    DataSource: inMemory
+    Properties:
+      hibernate.show-sql: 'true'
+      hibernate.hbm2ddl.auto: create-drop
+      hibernate.id.new_generator_mappings: 'false'
+  postgres:
+    DataSource: postgres
+    Properties:
+      hibernate.hbm2ddl.auto: update
+  mysql:
+    DataSource: mysql
+    Properties:
+      hibernate.hbm2ddl.auto: update
+  mariadb:
+    DataSource: maria
+    Properties:
+      hibernate.hbm2ddl.auto: update
+  mssql:
+    DataSource: mssql
+    Properties:
+      hibernate.hbm2ddl.auto: update
