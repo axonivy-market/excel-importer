@@ -6,7 +6,7 @@
 > This utility is no longer maintained for LTS 14.
 > The tech stack switch from Eclipse Designer to VSCode extension enforces a complete rewrite of the UI integration needed.
 > 
-> Successor: use Dialog Forms with a database table.
+> Successor: use Dialog Forms with a database table. See the [database-demos](https://github.com/axonivy/demo-projects/blob/master/database/db-demos/dialog/db/demos/persistence/PersonsForm/PersonsForm.f.json) for reference.
 
 Crafts a new web application and its first dialog from an existing Excel sheet.
 
